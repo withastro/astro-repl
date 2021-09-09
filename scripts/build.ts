@@ -22,6 +22,7 @@ const ESBUILD_OPTS = {
     format: "esm",
     sourcemap: true,
     splitting: true,
+    keepNames: true,
 
     loader: {
         '.ttf': 'file',
@@ -38,6 +39,7 @@ const ESBUILD_OPTS = {
 async function build() {
     const entryPoints = await globby([
         `src/editor/*.ts`,
+        `src/@astro/*.ts`,
         `!src/editor/**/*.d.ts`
     ], { absolute: true })
 
@@ -45,6 +47,16 @@ async function build() {
     const result = await esbuild.build({ 
         ...ESBUILD_OPTS,
         entryPoints
+    });
+
+    await esbuild.build({ 
+        ...ESBUILD_OPTS,
+        entryPoints: [
+            "src/@astro/internal/index.ts"
+        ],
+        outdir: undefined,
+        splitting: false,
+        outfile: "dist/@astro/internal.js",
     });
 
     // for (const err of result.errors) {

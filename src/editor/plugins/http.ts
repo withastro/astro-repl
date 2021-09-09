@@ -42,6 +42,13 @@ export const HTTP = (): Plugin => {
             // handle the example import from https://cdn.esm.sh/ but in reality this
             // would probably need to be more complex.
             build.onLoad({ filter: /.*/, namespace: HTTP_NAMESPACE }, async (args) => {
+                if (args.path.startsWith('/@astro/')) {
+                    const contents = await fetch(args.path).then(res => res.text());
+                    return {
+                        contents,
+                        loader: 'js',
+                    }
+                }
                 const { content, url } = await fetchPkg(args.path);
                 return {
                     contents: content,

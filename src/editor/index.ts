@@ -1,5 +1,6 @@
 import type { editor as Editor } from "monaco-editor";
 import ESBUILD_WORKER_URL from "worker:./workers/esbuild.ts";
+import { renderPage } from '../@astro/internal/index.ts';
 import '../styles/index.css'
 
 const frame = document.querySelector(`#frame`) as HTMLIFrameElement;
@@ -58,8 +59,19 @@ BundleWorker.onmessage = async ({ data }) => {
 
 async function renderToHTML(content: string) {
     const url = `data:application/javascript;base64,${Buffer.from(content).toString('base64')}`;
-    const { default: mod } = await import(url)
-    const html = await mod.__render();
+
+    const { default: mod } = await import(url);
+    const html = await renderPage({
+        styles: new Set(),
+        scripts: new Set(),
+        /** This function returns the `Astro` faux-global */
+        createAstro(props: any) {
+            // const site = location;
+            const url = new URL('http://localhost:3000/')
+            // const canonicalURL = getCanonicalURL(pathname, astroConfig.buildOptions.site || origin)
+            return { isPage: true, site: url, request: { url, canonicalURL: url }, props };
+        },
+    }, await mod, {}, null);
     return html;
 }
 
@@ -69,7 +81,7 @@ let editor: Editor.IStandaloneCodeEditor;
     // Monaco Code Editor
     let Monaco = await import("./modules/monaco");
     editor = Monaco.build();
-    editor.onDidChangeModelContent(async () => {
+    editor.onDidChangeModelContent(Monaco.debounce(async () => {
         const model = editor.getModel();
         value = model.getValue().trim();
         if (cache.has(value)) {
@@ -79,5 +91,5 @@ let editor: Editor.IStandaloneCodeEditor;
         } else {
             BundleWorker.postMessage(JSON.stringify({ filename: model.uri.path, value }))
         }
-    })
+    }))
 })()

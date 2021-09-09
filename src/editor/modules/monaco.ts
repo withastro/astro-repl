@@ -79,8 +79,11 @@ import GithubDark from "../themes/github-dark";
 import TYPESCRIPT_WORKER_URL from "worker:../workers/typescript.ts";
 import EDITOR_WORKER_URL from "worker:../workers/editor.ts";
 
-export const initialValue = `\
-// Hello world!`;
+export const initialValue = `---
+const name = "world"
+---
+<h1>Hello {name}!</h1>
+`;
 
 export const debounce = (func: Function, timeout = 300) => {
     let timer: any;
@@ -92,7 +95,7 @@ export const debounce = (func: Function, timeout = 300) => {
 
 export const build = () => {
     let inputEl = document.querySelector("#editor") as HTMLElement;
-    let editor: Editor.IStandaloneCodeEditor;
+    let editorInstance: Editor.IStandaloneCodeEditor;
 
     languages.typescript.javascriptDefaults.setEagerModelSync(true);
     languages.typescript.typescriptDefaults.setDiagnosticsOptions({
@@ -160,7 +163,7 @@ export const build = () => {
     // @ts-ignore
     Editor.defineTheme("dark", GithubDark);
 
-    editor = Editor.create(inputEl, {
+    editorInstance = Editor.create(inputEl, {
         model: null,
 
         minimap: {
@@ -183,7 +186,7 @@ export const build = () => {
     });
 
     const indexModel = Editor.createModel(initialValue, 'astro', Uri.parse("inmemory://model/src/pages/index.astro"))
-    editor.setModel(indexModel);
+    editorInstance.setModel(indexModel);
 
-    return editor;
+    return editorInstance;
 };
