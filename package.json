@@ -1,32 +1,33 @@
 {
-    "name": "@astrojs/repl",
-    "volta": {
-        "node": "16.5.0"
-    },
-    "scripts": {
-        "dev": "node -r esbuild-register scripts/build.ts --watch",
-        "copy": "cp src/index.html dist/index.html && cp node_modules/esbuild-wasm/esbuild.wasm dist/esbuild.wasm && cp node_modules/@astrojs/compiler/astro.wasm dist/astro.wasm",
-        "build": "npm run copy && node -r esbuild-register scripts/build.ts"
-    },
-    "devDependencies": {
-        "@types/node": "^16.7.1",
-        "astring": "^1.7.5",
-        "buffer": "^6.0.3",
-        "esbuild": "^0.12.22",
-        "esbuild-register": "^3.0.0",
-        "estree-util-value-to-estree": "^1.2.0",
-        "globby": "^12.0.1",
-        "shorthash": "^0.0.2"
-    },
-    "dependencies": {
-        "@astrojs/compiler": "^0.1.0-canary.34",
-        "assert": "^2.0.0",
-        "browser-builtins": "^3.3.1",
-        "esbuild-wasm": "^0.12.22",
-        "memfs": "^3.2.2",
-        "monaco-editor": "^0.27.0",
-        "path": "^0.12.7",
-        "stream": "^0.0.2",
-        "util": "^0.12.4"
-    }
+  "name": "@astrojs/repl",
+  "volta": {
+    "node": "16.5.0"
+  },
+  "scripts": {
+    "dev": "node -r esbuild-register scripts/build.ts --watch",
+    "copy": "cp src/index.html dist/index.html && cp node_modules/esbuild-wasm/esbuild.wasm dist/esbuild.wasm && cp node_modules/@astrojs/compiler/astro.wasm dist/astro.wasm",
+    "build": "npm run copy && node -r esbuild-register scripts/build.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^16.7.1",
+    "astring": "^1.7.5",
+    "buffer": "^6.0.3",
+    "esbuild": "^0.12.22",
+    "esbuild-register": "^3.0.0",
+    "estree-util-value-to-estree": "^1.2.0",
+    "globby": "^12.0.1",
+    "prettier": "^2.4.0",
+    "shorthash": "^0.0.2"
+  },
+  "dependencies": {
+    "@astrojs/compiler": "^0.1.0-canary.34",
+    "assert": "^2.0.0",
+    "browser-builtins": "^3.3.1",
+    "esbuild-wasm": "^0.12.22",
+    "memfs": "^3.2.2",
+    "monaco-editor": "^0.27.0",
+    "path": "^0.12.7",
+    "stream": "^0.0.2",
+    "util": "^0.12.4"
+  }
 }
