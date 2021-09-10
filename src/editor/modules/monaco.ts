@@ -82,19 +82,21 @@ import EDITOR_WORKER_URL from "worker:../workers/editor.ts";
 export const initialValue = `---
 const name = "world"
 ---
-<h1>Hello {name}!</h1>
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello {name}</title>
+  </head>
+  <body>
+    <main>
+      <h1>Hello {name}</h1>
+    </main>
+  </body>
+</html>
 `;
 
-export const debounce = (func: Function, timeout = 300) => {
-    let timer: any;
-    return (...args: any) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => { func.apply(this, args); }, timeout);
-    };
-};
-
-export const build = () => {
-    let inputEl = document.querySelector("#editor") as HTMLElement;
+export const build = (inputEl: HTMLElement) => {
     let editorInstance: Editor.IStandaloneCodeEditor;
 
     languages.typescript.javascriptDefaults.setEagerModelSync(true);

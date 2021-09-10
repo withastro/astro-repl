@@ -256,7 +256,20 @@ button {
 
 .ap-preview-frame {
   background: white;
+  flex-grow: 1;
+  width: 100%;
+  display: flex;
+}
+
+.ap-preview-html {
   border: none;
+  flex-grow: 1;
+  width: 100%;
+}
+
+.ap-preview-js {
+  padding: 0.25em 1.5em;
+  color: black;
   flex-grow: 1;
   width: 100%;
 }

@@ -38,6 +38,7 @@ const ESBUILD_OPTS = {
 
 async function build() {
     const entryPoints = await globby([
+        `src/index.ts`,
         `src/editor/*.ts`,
         `src/@astro/*.ts`,
         `!src/editor/**/*.d.ts`
