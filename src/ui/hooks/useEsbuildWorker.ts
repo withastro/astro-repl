@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { renderAstroToHTML } from '../../utils';
 
 const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneCodeEditor>, deps: any[]) => {
+  const trackedValue = useRef('');
   const [html, setHtml] = useState('');
 
   useEffect(() => {
@@ -14,6 +15,7 @@ const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneC
     const model = editor.getModel();
     const value = model.getValue();
     if (value.trim()) {
+      trackedValue.current = value.trim();
       worker.postMessage(JSON.stringify({ filename: model.uri.path, value }));
     }
   }, deps);
@@ -36,9 +38,11 @@ const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneC
         return;
       }
 
-      let { content } = data.value;
-      const output = await renderAstroToHTML(content);
-      setHtml(output)
+      let { content, input } = data.value;
+      if (trackedValue.current === input.trim()) {
+        const output = await renderAstroToHTML(content);
+        setHtml(output)
+      }
     }
     worker.onmessage = handleMessage;
   }, []);

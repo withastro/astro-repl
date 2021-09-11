@@ -1,15 +1,18 @@
 import type { editor as Editor } from 'monaco-editor';
 import type { RefObject } from 'preact';
-import { useState, useEffect } from 'preact/hooks';
+import { useState, useEffect, useRef } from 'preact/hooks';
 
 const useAstroWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneCodeEditor>, deps: any[]) => {
   const [js, setJs] = useState('');
+  const trackedValue = useRef('');
+
   useEffect(() => {
     if (!editorInstance.current) return;
     const editor = editorInstance.current;
 
     const model = editor.getModel();
     const value = model.getValue();
+    trackedValue.current = value;
     worker.postMessage(JSON.stringify({ filename: model.uri.path, value }));
   }, deps);
 
@@ -31,8 +34,11 @@ const useAstroWorker = (worker: Worker, editorInstance: RefObject<Editor.IStanda
         return;
       }
 
-      let { content } = data.value;
-      setJs(content)
+      let { content, input } = data.value;
+      console.log(trackedValue.current === input)
+      if (trackedValue.current === input) {
+        setJs(content)
+      }
     }
     worker.onmessage = handleMessage;
   }, []);

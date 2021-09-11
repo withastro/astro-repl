@@ -129,6 +129,6 @@ self.onmessage = async ({ data }) => {
     }
 
     post({
-        value: { content }
+        value: { input, content }
     });
 };
