@@ -24,7 +24,6 @@ const App: FunctionalComponent<Props> = ({ Monaco, esbuildWorker, astroWorker })
 
   return (
     <>
-      <Sidebar />
       <Editor ref={editorRef} />
       <Preview html={html} js={js} />
       <StatusBar />
