@@ -70,7 +70,8 @@ import 'monaco-editor/esm/vs/editor/contrib/wordPartOperations/wordPartOperation
 // import '../../node_modules/monaco-editor/esm/vs/editor/common/standaloneStrings.js';
 import 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles'; // The codicons are defined here and must be loaded
 
-import { editor as Editor, languages, Uri } from 'monaco-editor';
+import { editor as Editor, languages, editor, Uri } from 'monaco-editor';
+import { register } from './monaco-astro';
 
 // import GithubLight from "../util/github-light";
 import GithubDark from "../themes/github-dark";
@@ -99,6 +100,7 @@ const name = "world"
 export const build = (inputEl: HTMLElement) => {
     let editorInstance: Editor.IStandaloneCodeEditor;
 
+    register();
     languages.typescript.javascriptDefaults.setEagerModelSync(true);
     languages.typescript.typescriptDefaults.setDiagnosticsOptions({
         noSemanticValidation: true,
