@@ -2,7 +2,6 @@ import type { FunctionalComponent } from 'preact';
 import { h, Fragment } from 'preact';
 import { useRef, useEffect } from 'preact/hooks';
 
-import Sidebar from './Sidebar';
 import Editor from './Editor';
 import Preview from './Preview';
 import StatusBar from './StatusBar';
