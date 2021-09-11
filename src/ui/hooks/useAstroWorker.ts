@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 
 const useAstroWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneCodeEditor>, deps: any[]) => {
   const [js, setJs] = useState('');
-  const trackedValue = useRef('');
+  const [span, setSpan] = useState(0);
+  const trackedValue = useRef({ value: '', start: 0 });
 
   useEffect(() => {
     if (!editorInstance.current) return;
@@ -12,7 +13,7 @@ const useAstroWorker = (worker: Worker, editorInstance: RefObject<Editor.IStanda
 
     const model = editor.getModel();
     const value = model.getValue();
-    trackedValue.current = value;
+    trackedValue.current = { value, start: performance.now() };
     worker.postMessage(JSON.stringify({ filename: model.uri.path, value }));
   }, deps);
 
@@ -35,15 +36,15 @@ const useAstroWorker = (worker: Worker, editorInstance: RefObject<Editor.IStanda
       }
 
       let { content, input } = data.value;
-      console.log(trackedValue.current === input)
-      if (trackedValue.current === input) {
+      if (trackedValue.current.value === input) {
         setJs(content)
+        setSpan(performance.now() - trackedValue.current.start);
       }
     }
     worker.onmessage = handleMessage;
   }, []);
 
-  return js;
+  return { js, duration: span };
 };
 
 export default useAstroWorker;

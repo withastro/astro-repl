@@ -1,13 +1,34 @@
+import type { FunctionalComponent } from 'preact';
 import { h } from 'preact';
+import ms from 'ms';
 
-const StatusBar = () => {
+export interface Props {
+  duration: number
+  error?: Error;
+}
+
+const StatusBar: FunctionalComponent<Props> = ({ error, duration = 0 }) => {
+  if (error) {
+    const [reason, message] = error.toString().split(':');
+    return (
+      <aside class="ap-statusbar ap-statusbar-error">
+        <span id="status" class="ap-statusbar-status">
+          {reason.trim()}
+        </span>
+        <span id="last-task-time" class="ap-statusbar-time">
+          {message.trim()}
+        </span>
+      </aside>
+    );
+  }
+  duration = Math.floor(duration);
   return (
     <aside class="ap-statusbar">
       <span id="status" class="ap-statusbar-status">
-        Done
+        Compiled in
       </span>
       <span id="last-task-time" class="ap-statusbar-time">
-        3ms
+        {ms(duration)}
       </span>
     </aside>
   );

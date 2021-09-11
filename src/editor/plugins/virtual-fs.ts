@@ -1,6 +1,5 @@
 import path from 'path';
 import { fs } from "memfs";
-import { HTTP_NAMESPACE } from './http';
 import { transform, initialize } from '@astrojs/compiler';
 
 import type { Plugin } from 'esbuild';
@@ -24,15 +23,16 @@ const init = async () => {
     }
 }
 
-export const VIRTUAL_FS = (): Plugin => {
+export const VIRTUAL_FS = (filename: string): Plugin => {
     return {
         name: VIRTUAL_FS_NAMESPACE,
         setup(build) {
             build.onResolve({ filter: /.*/, namespace: VIRTUAL_FS_NAMESPACE }, (args) => {
                 if (args.path.startsWith('/@astro/')) {
                     return {
-                        path: args.path,
-                        namespace: HTTP_NAMESPACE,
+                        path: new URL(args.path, self.location.origin).toString(),
+                        namespace: 'external',
+                        external: true
                     }
                 }
                 return {
@@ -58,7 +58,7 @@ export const VIRTUAL_FS = (): Plugin => {
                     await init();
                     let tsContent = '';
                     try {
-                        tsContent = await transform(content, { internalURL: '/@astro/internal.min.js', sourcemap: 'inline' }).then(res => res.code);
+                        tsContent = await transform(content, { internalURL: '/@astro/internal.min.js', sourcemap: 'inline', sourcefile: '/#' + filename }).then(res => res.code);
                     } catch (e) {
                         console.log(e);
                     }

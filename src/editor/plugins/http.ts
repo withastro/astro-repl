@@ -21,7 +21,8 @@ export const HTTP = (): Plugin => {
             build.onResolve({ filter: /^https?:\/\// }, args => {
                 return {
                     path: new URL(args.path, args.resolveDir.replace(/^\//, '')).toString(),
-                    namespace: HTTP_NAMESPACE,
+                    namespace: 'external',
+                    external: true
                 };
             });
 
@@ -33,7 +34,8 @@ export const HTTP = (): Plugin => {
             build.onResolve({ filter: /.*/, namespace: HTTP_NAMESPACE }, args => {
                 return {
                     path: new URL(args.path, args.importer).toString(),
-                    namespace: HTTP_NAMESPACE,
+                    namespace: 'external',
+                    external: true
                 };
             });
 
@@ -42,13 +44,6 @@ export const HTTP = (): Plugin => {
             // handle the example import from https://cdn.esm.sh/ but in reality this
             // would probably need to be more complex.
             build.onLoad({ filter: /.*/, namespace: HTTP_NAMESPACE }, async (args) => {
-                if (args.path.startsWith('/@astro/')) {
-                    const contents = await fetch(args.path).then(res => res.text());
-                    return {
-                        contents,
-                        loader: 'js',
-                    }
-                }
                 const { content, url } = await fetchPkg(args.path);
                 return {
                     contents: content,

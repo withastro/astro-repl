@@ -3,19 +3,16 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 
 export interface Props {
+  hasError: boolean;
   html: string;
   js: string;
 }
 
-const Preview: FunctionalComponent<Props> = ({ html, js }) => {
+const Preview: FunctionalComponent<Props> = ({ hasError, html, js }) => {
   const [currentTab, setCurrentTab] = useState('preview');
 
-  useEffect(() => {
-    console.log(html);
-  }, [html])
-
   return (
-    <div id="output" class="ap-preview">
+    <div id="output" class={`ap-preview ${hasError ? 'ap-preview-has-error' : ''}`.trim()}>
       <menu class="ap-preview-menu">
         <ul role="tabgroup" class="ap-preview-tabs">
           <li class="ap-preview-tabwrapper">

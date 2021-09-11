@@ -267,6 +267,10 @@ button {
   width: 100%;
 }
 
+.ap-preview-has-error .ap-preview-frame {
+  opacity: 0.65;
+}
+
 .ap-preview-js {
   padding: 0.25em 1.5em;
   color: black;
@@ -375,11 +379,23 @@ button {
 /* =========== */
 
 .ap-statusbar {
-  font-size: var(--f-d1);
-  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  grid-column: 1 / -1;
+  font-size: var(--f-d3);
+  padding: 0.05rem 0.5rem;
+  background: var(--c-navy-t1);
+}
+
+.ap-statusbar-error {
+  background: var(--c-orange);
+  padding: 0.25rem 0.5rem;
+}
+
+.ap-statusbar-status {
+  font-weight: bold;
 }
 
 .ap-statusbar-time {
-  margin-left: 0.5em;
-  opacity: 0.65;
+  margin-left: 0.25em;
 }

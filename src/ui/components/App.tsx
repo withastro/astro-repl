@@ -1,6 +1,6 @@
 import type { FunctionalComponent } from 'preact';
 import { h, Fragment } from 'preact';
-import { useRef, useEffect } from 'preact/hooks';
+import { useRef } from 'preact/hooks';
 
 import Editor from './Editor';
 import Preview from './Preview';
@@ -18,14 +18,14 @@ export interface Props {
 const App: FunctionalComponent<Props> = ({ Monaco, esbuildWorker, astroWorker }) => {
   const editorRef = useRef<HTMLElement|null>(null);
   const { editor, model } = useMonaco(Monaco, editorRef);
-  const html = useEsbuildWorker(esbuildWorker, editor, [model]);
-  const js = useAstroWorker(astroWorker, editor, [model]);
+  const { html, error } = useEsbuildWorker(esbuildWorker, editor, [model]);
+  const { js, duration } = useAstroWorker(astroWorker, editor, [model]);
 
   return (
     <>
       <Editor ref={editorRef} />
-      <Preview html={html} js={js} />
-      <StatusBar />
+      <Preview hasError={!!error} html={html} js={js} />
+      <StatusBar error={error} duration={duration}/>
     </>
   );
 };

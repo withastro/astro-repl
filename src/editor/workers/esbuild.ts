@@ -76,10 +76,11 @@ self.onmessage = async ({ data }) => {
             entryPoints: ['<stdin>'],
             bundle: true,
             minify: true,
+            sourcemap: 'inline',
             color: true,
             incremental: false,
             target: ["esnext"],
-            logLevel: 'info',
+            logLevel: 'silent',
             write: false,
             outfile,
             platform: "browser",
@@ -104,7 +105,7 @@ self.onmessage = async ({ data }) => {
                 BARE(),
                 HTTP(),
                 CDN(),
-                VIRTUAL_FS(),
+                VIRTUAL_FS(filename),
                 WASM(),
             ],
             globalName: 'bundler',
@@ -118,6 +119,14 @@ self.onmessage = async ({ data }) => {
             fs.writeFileSync(x.path, x.text);
         });
 
+        if (result.errors && result.errors.length > 0) {
+            post({
+                type: 'esbuild build error',
+                error: result.errors[0]
+            })
+            return;
+        }
+
         content = await fs.promises.readFile(outfile, "utf-8") as string;
         content = content?.trim?.(); // Remove unesscary space
     } catch (error) {
@@ -127,7 +136,6 @@ self.onmessage = async ({ data }) => {
         });
         return;
     }
-
     post({
         value: { input, content }
     });

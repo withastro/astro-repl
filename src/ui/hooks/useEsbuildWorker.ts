@@ -7,6 +7,7 @@ import { renderAstroToHTML } from '../../utils';
 const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneCodeEditor>, deps: any[]) => {
   const trackedValue = useRef('');
   const [html, setHtml] = useState('');
+  const [err, setErr] = useState(null);
 
   useEffect(() => {
     if (!editorInstance.current) return;
@@ -22,7 +23,7 @@ const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneC
 
   useEffect(() => {
     async function handleMessage({ data }: any) {
-        if (data.warn) {
+      if (data.warn) {
         console.warn(data.warn + ' \n');
         return;
       }
@@ -34,20 +35,32 @@ const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneC
 
       if (data.error) {
         console.error(data.type + ' (please create a new issue in the repo)\n', data.error);
-        // fileSizeEl.textContent = `Error`;
+        if (typeof data.error === 'object') {
+          const message = data.error.message.split('virtualfs:')[1].split(' ').slice(1).join(' ').split('\n')[0].replace('error', 'Error');
+          setErr(message);
+          return;
+        }
+        setErr(data.error);
         return;
       }
 
-      let { content, input } = data.value;
-      if (trackedValue.current === input.trim()) {
-        const output = await renderAstroToHTML(content);
-        setHtml(output)
+      if (data.value) {
+        setErr(null);
+        let { content, input } = data.value;
+        if (trackedValue.current === input.trim()) {
+          const output = await renderAstroToHTML(content);
+          if (typeof output === 'string') {
+            setHtml(output);
+          } else {
+            setErr(output.errors[0]);
+          }
+        }
       }
     }
     worker.onmessage = handleMessage;
   }, []);
 
-  return html;
+  return { html, error: err };
 };
 
 export default useWorker;
