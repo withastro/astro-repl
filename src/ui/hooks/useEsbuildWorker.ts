@@ -35,8 +35,8 @@ const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneC
 
       if (data.error) {
         console.error(data.type + ' (please create a new issue in the repo)\n', data.error);
-        if (typeof data.error === 'object') {
-          const message = data.error.message.split('virtualfs:')[1].split(' ').slice(1).join(' ').split('\n')[0].replace('error', 'Error');
+        if (typeof data.error === 'object' && data.error.message) {
+          const message = data.error.message?.split('virtualfs:')[1]?.split(' ').slice(1).join(' ').split('\n')[0]?.replace('error', 'Error');
           setErr(message);
           return;
         }

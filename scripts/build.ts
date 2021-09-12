@@ -3,10 +3,7 @@ import path from 'path';
 import { globby } from 'globby';
 import { WEB_WORKER } from './plugins/worker';
 
-/**
- * @type {import('esbuild').BuildOptions}
- */
-const ESBUILD_OPTS = {
+const ESBUILD_OPTS: esbuild.BuildOptions = {
     target: ["es2018"],
     platform: "browser",
     outdir: "dist",
@@ -34,9 +31,10 @@ const ESBUILD_OPTS = {
     plugins: [
         WEB_WORKER(),
     ]
-}
+};
 
 async function build() {
+    const isWatch = !!process.argv.find(arg => arg === '--watch');
     const entryPoints = await globby([
         `src/index.ts`,
         `src/editor/*.ts`,
@@ -45,9 +43,10 @@ async function build() {
     ], { absolute: true })
 
     entryPoints.push(path.resolve(`node_modules/esbuild-wasm/esbuild.wasm`));
-    const result = await esbuild.build({ 
+    await esbuild.build({
         ...ESBUILD_OPTS,
-        entryPoints
+        entryPoints,
+        watch: isWatch,
     });
 
     await esbuild.build({ 

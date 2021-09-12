@@ -189,7 +189,7 @@ export const build = (inputEl: HTMLElement) => {
         lineNumbers: "on"
     });
 
-    const indexModel = Editor.createModel(initialValue, 'astro', Uri.parse("inmemory://model/src/pages/index.astro"))
+    const indexModel = Editor.createModel(initialValue, 'astro', Uri.parse("inmemory://model/src/pages/Page.astro"))
     editorInstance.setModel(indexModel);
 
     return editorInstance;

@@ -101,9 +101,15 @@ button {
 /*  Editor  */
 /* ======= */
 
+.ap-editor-frame {
+  grid-area: editor;
+  display: flex;
+  flex-direction: column;
+}
+
 .ap-editor {
   background: #24292e; /* manually copied from theme while it loads */
-  grid-area: editor;
+  flex: 1;
 }
 
 /* ======== */
@@ -276,6 +282,18 @@ button {
   color: black;
   flex-grow: 1;
   width: 100%;
+  position: relative;
+}
+
+pre.shiki {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
+  padding: 0.25em 1.5em;
+  padding-right: 4em;
 }
 
 .ap-preview-menu {
@@ -337,6 +355,7 @@ button {
 }
 
 .ap-preview-tabwrapper {
+  position: relative;
   display: block;
 }
 
@@ -363,6 +382,42 @@ button {
   list-style: none;
   margin: 0 auto 0 0;
   padding: 0;
+  overflow-x: auto;
+}
+
+.ap-preview-tabs svg {
+  width: 1rem;
+  height: 1rem;
+  color: inherit;
+}
+
+.ap-preview-tabwrapper-add {
+  position: sticky;
+  right: 0;
+  background: var(--t-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ap-tab-can-remove {
+  padding-right: 0.75em;
+}
+.ap-tab-can-remove .ap-preview-tab {
+  margin-right: 0.25em;
+  width: calc(100% + 0.75em);
+}
+
+.ap-tab-remove {
+  width: 1em;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  right: 0.5em;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* =========== */

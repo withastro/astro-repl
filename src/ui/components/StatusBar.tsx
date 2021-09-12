@@ -9,7 +9,8 @@ export interface Props {
 
 const StatusBar: FunctionalComponent<Props> = ({ error, duration = 0 }) => {
   if (error) {
-    const [reason, message] = error.toString().split(':');
+    const [reason, ...messages] = error.toString().split(':');
+    const message = messages.join(':');
     return (
       <aside class="ap-statusbar ap-statusbar-error">
         <span id="status" class="ap-statusbar-status">

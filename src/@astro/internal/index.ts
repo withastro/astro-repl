@@ -153,52 +153,51 @@ setup("${astroId}", {${metadata.hydrateArgs ? `value: ${JSON.stringify(metadata.
 export const renderComponent = async (result: any, displayName: string, Component: unknown, _props: Record<string | number, any>, children: any) => {
   Component = await Component;
   // children = await renderGenerator(children);
-  const { renderers } = result._metadata;
   if (Component && (Component as any).isAstroComponentFactory) {
     const output = await renderAstroComponent(await (Component as any)(result, Component, _props, children))
     return output;
   }
+  // const { renderers } = result._metadata;
+  // let metadata: AstroComponentMetadata = { displayName };
 
-  let metadata: AstroComponentMetadata = { displayName };
-
-  if (Component == null) {
-    throw new Error(`Unable to render ${metadata.displayName} because it is ${Component}!\nDid you forget to import the component or is it possible there is a typo?`);
-  }
-  // else if (typeof Component === 'string' && !isCustomElementTag(Component)) {
-  //   throw new Error(`Astro is unable to render ${metadata.displayName}!\nIs there a renderer to handle this type of component defined in your Astro config?`);
+  // if (Component == null) {
+  //   throw new Error(`Unable to render ${metadata.displayName} because it is ${Component}!\nDid you forget to import the component or is it possible there is a typo?`);
   // }
-  const { hydrationDirective, props } = extractHydrationDirectives(_props);
-  let html = '';
+  // // else if (typeof Component === 'string' && !isCustomElementTag(Component)) {
+  // //   throw new Error(`Astro is unable to render ${metadata.displayName}!\nIs there a renderer to handle this type of component defined in your Astro config?`);
+  // // }
+  // const { hydrationDirective, props } = extractHydrationDirectives(_props);
+  // let html = '';
 
-  if (!hydrationDirective) {
-    return '<pre>Not implemented</pre>';
-  }
-  metadata.hydrate = hydrationDirective[0] as AstroComponentMetadata['hydrate'];
-  metadata.hydrateArgs = hydrationDirective[1];
+  // if (!hydrationDirective) {
+  //   return '<pre>Not implemented</pre>';
+  // }
+  // metadata.hydrate = hydrationDirective[0] as AstroComponentMetadata['hydrate'];
+  // metadata.hydrateArgs = hydrationDirective[1];
 
-  for (const [url, exported] of Object.entries(result._metadata.importedModules)) {
-    for (const [key, value] of Object.entries(exported as any)) {
-      if (Component === value) {
-        metadata.componentExport = { value: key };
-        metadata.componentUrl = url;
-        break;
-      }
-    }
-  }
+  // for (const [url, exported] of Object.entries(result._metadata.importedModules)) {
+  //   for (const [key, value] of Object.entries(exported as any)) {
+  //     if (Component === value) {
+  //       metadata.componentExport = { value: key };
+  //       metadata.componentUrl = url;
+  //       break;
+  //     }
+  //   }
+  // }
 
-  let renderer = null;
-  for (const r of renderers) {
-    if (await r.ssr.check(Component, props, null)) {
-      renderer = r;
-    }
-  }
+  // let renderer = null;
+  // for (const r of renderers) {
+  //   if (await r.ssr.check(Component, props, null)) {
+  //     renderer = r;
+  //   }
+  // }
 
-  ({ html } = await renderer.ssr.renderToStaticMarkup(Component, props, null));
-  const astroId = shorthash.unique(html);
+  // ({ html } = await renderer.ssr.renderToStaticMarkup(Component, props, null));
+  // const astroId = shorthash.unique(html);
 
-  result.scripts.add(await generateHydrateScript({ renderer, astroId, props }, metadata as Required<AstroComponentMetadata>));
+  // result.scripts.add(await generateHydrateScript({ renderer, astroId, props }, metadata as Required<AstroComponentMetadata>));
 
-  return `<astro-root uid="${astroId}">${html}</astro-root>`;
+  // return `<astro-root uid="${astroId}">${html}</astro-root>`;
 };
 
 export const addAttribute = (value: any, key: string) => {

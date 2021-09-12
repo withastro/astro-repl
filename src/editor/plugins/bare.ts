@@ -9,6 +9,13 @@ export const BARE = (): Plugin => {
     name: 'bare',
     setup(build) {
       build.onResolve({ filter: /.*/ }, (args) => {
+        if (/^\@\//.test(args.path)) {
+          return {
+            path: args.path,
+            namespace: 'external',
+            external: true,
+          };
+        }
         if (/^(?!\.).*/.test(args.path) && !path.isAbsolute(args.path)) {
           let argPath = args.path.replace(/^(skypack|esm|esm\.sh|unpkg|jsdelivr|esm\.run)\:/, '');
           let host = HOST;

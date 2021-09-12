@@ -44,6 +44,9 @@ export const VIRTUAL_FS = (filename: string): Plugin => {
 
             build.onLoad({ filter: /.*/, namespace: VIRTUAL_FS_NAMESPACE }, async (args) => {
                 let realPath = args.path;
+                if (realPath.startsWith('@/')) {
+                    realPath = args.path.replace(/^\@\//, '/src/components/');
+                }
                 const resolvePath = resolve({
                     id: args.path,
                     importer: args.pluginData.importer

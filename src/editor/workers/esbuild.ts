@@ -4,6 +4,7 @@ import { initialize, build, BuildResult, OutputFile, BuildIncremental } from "es
 import path from "path";
 import { fs, vol } from "memfs";
 
+import { ALIAS } from "../plugins/alias";
 import { EXTERNAL } from "../plugins/external";
 import { ENTRY } from "../plugins/entry";
 import { JSON_PLUGIN } from "../plugins/json";
@@ -98,6 +99,7 @@ self.onmessage = async ({ data }) => {
                 "process.env.NODE_ENV": `"production"`
             },
             plugins: [
+                ALIAS(),
                 EXTERNAL(),
                 ENTRY(filename),
                 JSON_PLUGIN(),
