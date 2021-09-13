@@ -61,7 +61,7 @@ export const VIRTUAL_FS = (filename: string): Plugin => {
                     await init();
                     let tsContent = '';
                     try {
-                        tsContent = await transform(content, { internalURL: '/play/@astro/internal.min.js', sourcemap: 'inline', sourcefile: '/#' + filename }).then(res => res.code);
+                        tsContent = await transform(content, { internalURL: '/play/@astro/internal.min.js', sourcemap: false, sourcefile: '/#' + filename }).then(res => res.code);
                     } catch (e) {
                         console.log(e);
                     }
