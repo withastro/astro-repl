@@ -45,7 +45,8 @@ export const WEB_WORKER = () => {
 
                         sourcemap: true,
                         assetNames: "[name]",
-                        format: "esm",
+                        // FIX: Firefox and Safari do not support Module workers
+                        format: "iife",
 
                         minify: true,
                         bundle: true,
