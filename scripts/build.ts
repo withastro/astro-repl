@@ -1,6 +1,6 @@
 import esbuild from 'esbuild';
 import path from 'path';
-import { globby } from 'globby';
+import globby from 'globby';
 import { WEB_WORKER } from './plugins/worker';
 import { rm, mkdir, copyFile } from 'fs/promises';
 

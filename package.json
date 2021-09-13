@@ -5,7 +5,7 @@
   },
   "scripts": {
     "dev": "node -r esbuild-register scripts/build.ts --watch",
-    "build": "node -r esbuild-register scripts/build.ts"
+    "build": "node -r esbuild-register scripts/build.ts  --external=\"node/*\""
   },
   "devDependencies": {
     "@types/ms": "^0.7.31",
@@ -15,7 +15,7 @@
     "esbuild": "^0.12.22",
     "esbuild-register": "^3.0.0",
     "estree-util-value-to-estree": "^1.2.0",
-    "globby": "^12.0.1",
+    "globby": "^11.0.4",
     "prettier": "^2.4.0",
     "shorthash": "^0.0.2"
   },
