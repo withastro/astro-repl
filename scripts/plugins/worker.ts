@@ -32,7 +32,7 @@ export const WEB_WORKER = () => {
                 const outFileName = workerFileName.replace(/\.ts$/, '.worker.js');
 
                 // This one depends on your file structure
-                const outFileWithRelativePath = join('dist', 'workers', outFileName);
+                const outFileWithRelativePath = join('dist', 'play', 'workers', outFileName);
 
                 try {
                     const __dirname = path.resolve();

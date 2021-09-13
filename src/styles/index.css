@@ -436,10 +436,21 @@ pre.shiki {
 .ap-statusbar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   grid-column: 1 / -1;
   font-size: var(--f-d3);
   padding: 0.05rem 0.5rem;
   background: var(--c-navy-t1);
+}
+
+.ap-statusbar a {
+  color: white;
+  text-decoration: none;
+}
+
+.ap-statusbar a:hover,
+.ap-statusbar a:focus {
+  text-decoration: underline;
 }
 
 .ap-statusbar-error {

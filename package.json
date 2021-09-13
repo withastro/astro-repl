@@ -5,8 +5,7 @@
   },
   "scripts": {
     "dev": "node -r esbuild-register scripts/build.ts --watch",
-    "copy": "cp src/index.html dist/index.html && cp node_modules/esbuild-wasm/esbuild.wasm dist/esbuild.wasm && cp node_modules/@astrojs/compiler/astro.wasm dist/astro.wasm",
-    "build": "npm run copy && node -r esbuild-register scripts/build.ts"
+    "build": "node -r esbuild-register scripts/build.ts"
   },
   "devDependencies": {
     "@types/ms": "^0.7.31",

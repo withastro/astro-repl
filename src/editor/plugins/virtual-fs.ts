@@ -18,7 +18,7 @@ let _initialized = false
 
 const init = async () => {
     if (!_initialized) {
-        await initialize({ wasmURL: '/astro.wasm' });
+        await initialize({ wasmURL: '/play/astro.wasm' });
         _initialized = true;
     }
 }
@@ -28,7 +28,7 @@ export const VIRTUAL_FS = (filename: string): Plugin => {
         name: VIRTUAL_FS_NAMESPACE,
         setup(build) {
             build.onResolve({ filter: /.*/, namespace: VIRTUAL_FS_NAMESPACE }, (args) => {
-                if (args.path.startsWith('/@astro/')) {
+                if (args.path.startsWith('/play/@astro/')) {
                     return {
                         path: new URL(args.path, self.location.origin).toString(),
                         namespace: 'external',
@@ -61,7 +61,7 @@ export const VIRTUAL_FS = (filename: string): Plugin => {
                     await init();
                     let tsContent = '';
                     try {
-                        tsContent = await transform(content, { internalURL: '/@astro/internal.min.js', sourcemap: 'inline', sourcefile: '/#' + filename }).then(res => res.code);
+                        tsContent = await transform(content, { internalURL: '/play/@astro/internal.min.js', sourcemap: 'inline', sourcefile: '/#' + filename }).then(res => res.code);
                     } catch (e) {
                         console.log(e);
                     }

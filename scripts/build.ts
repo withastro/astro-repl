@@ -2,11 +2,12 @@ import esbuild from 'esbuild';
 import path from 'path';
 import { globby } from 'globby';
 import { WEB_WORKER } from './plugins/worker';
+import { rm, mkdir, copyFile } from 'fs/promises';
 
 const ESBUILD_OPTS: esbuild.BuildOptions = {
     target: ["es2018"],
     platform: "browser",
-    outdir: "dist",
+    outdir: "dist/play",
 
     mainFields: ['esbuild', 'browser', 'module', 'main'],
 
@@ -35,6 +36,22 @@ const ESBUILD_OPTS: esbuild.BuildOptions = {
 
 async function build() {
     const isWatch = !!process.argv.find(arg => arg === '--watch');
+    try {
+        await rm('dist', { recursive: true });
+    } catch (e) {}
+    try {
+        await mkdir('dist/play', { recursive: true });
+    } catch (e) {}
+    try {
+        const pub = await globby('public/**/*');
+        const wasm = ['node_modules/esbuild-wasm/esbuild.wasm', 'node_modules/@astrojs/compiler/astro.wasm'];
+        await Promise.all(wasm.map(src => {
+            const dest = `dist/play/${path.basename(src)}`;
+            return copyFile(src, dest);
+        }));
+        console.log(pub);
+        await Promise.all(pub.map(src => copyFile(src, src.replace(/^public/, path.join('dist', 'play')))))
+    } catch (e) {}
     const entryPoints = await globby([
         `src/index.ts`,
         `src/editor/*.ts`,
@@ -56,7 +73,7 @@ async function build() {
         ],
         outdir: undefined,
         splitting: false,
-        outfile: "dist/@astro/internal.js",
+        outfile: "dist/play/@astro/internal.js",
     });
 
     // for (const err of result.errors) {

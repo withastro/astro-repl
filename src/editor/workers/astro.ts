@@ -11,7 +11,7 @@ const post = data => self.postMessage(data);
 const init = async () => {
     if (!_initialized) {
         setCDN('https://unpkg.com/shiki/')
-        await initialize({ wasmURL: '/astro.wasm' });
+        await initialize({ wasmURL: '/play/astro.wasm' });
         highlighter = await getHighlighter({ theme: 'github-light', langs: ['ts'] });
         _initialized = true;
     }

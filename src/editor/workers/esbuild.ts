@@ -27,7 +27,7 @@ const init = async () => {
             
             await initialize({
                 worker: false,
-                wasmURL: `/esbuild.wasm`
+                wasmURL: `/play/esbuild.wasm`
             });
 
             post({
