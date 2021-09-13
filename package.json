@@ -5,7 +5,7 @@
   },
   "scripts": {
     "dev": "node -r esbuild-register scripts/build.ts --watch",
-    "build": "node -r esbuild-register scripts/build.ts  --external=\"node/*\""
+    "build": "node -r esbuild-register scripts/build.ts"
   },
   "devDependencies": {
     "@types/ms": "^0.7.31",
