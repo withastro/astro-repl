@@ -49,7 +49,6 @@ async function build() {
             const dest = `dist/play/${path.basename(src)}`;
             return copyFile(src, dest);
         }));
-        console.log(pub);
         await Promise.all(pub.map(src => copyFile(src, src.replace(/^public/, path.join('dist', 'play')))))
     } catch (e) {}
     const entryPoints = await globby([
@@ -75,14 +74,6 @@ async function build() {
         splitting: false,
         outfile: "dist/play/@astro/internal.js",
     });
-
-    // for (const err of result.errors) {
-    //     console.error(err);
-    // }
-
-    // for (const warn of result.warnings) {
-    //     console.warn(warn);
-    // }
 }
 
 
