@@ -5,6 +5,7 @@
   --c-navy-t1: rgb(46, 59, 78);
   --c-navy-t2: rgb(64, 82, 107);
   --c-orange: rgb(255, 94, 0);
+  --c-maroon: rgb(153, 22, 47);
   --c-white: rgb(255, 255, 255);
 
   /* (f)ont */
@@ -51,9 +52,13 @@
   --t-bg-d1: var(--c-navy-s1);
   --t-bg-u1: var(--c-navy-t1);
   --t-bg-u2: var(--c-navy-t2);
+  --t-error: var(--c-maroon);
   --t-fg: var(--c-white);
 
   /* (z)-layers */
+
+  /* various */
+  --tab-height: 2.5rem; /* keeps tab heights aligned across breakpoints */
 
   /* TODO: light theme */
 }
@@ -91,25 +96,38 @@ button {
 
 .ap-app {
   display: grid;
-  grid-template-areas: 'editor preview' 'statusbar statusbar';
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  grid-template-rows: 1fr 2rem;
+  grid-template-areas: 'preview' 'statusbar' 'menu';
+  grid-template-rows: 1fr 3rem 2rem;
   height: 100vh;
+}
+
+@media (min-width: 600px) {
+  .ap-app {
+    grid-template-areas: 'code menu' 'code preview' 'statusbar statusbar';
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: var(--tab-height) 1fr 2rem;
+  }
+}
+
+.ap-app-tabs > * {
+  flex-grow: 1; /* on mobile, tabs should take up max width */
+  text-align: center;
+}
+
+@media (min-width: 600px) {
+  .ap-app-tabs > * {
+    flex-grow: 0;
+    text-align: left;
+  }
 }
 
 /* ========= */
 /*  Editor  */
 /* ======= */
 
-.ap-editor-frame {
-  grid-area: editor;
-  display: flex;
-  flex-direction: column;
-}
-
 .ap-editor {
-  background: #24292e; /* manually copied from theme while it loads */
-  flex: 1;
+  display: grid;
+  grid-template-rows: var(--tab-height) 1fr;
 }
 
 /* ======== */
@@ -120,14 +138,6 @@ button {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.ap-files-add {
-  color: var(--t-a);
-  font-size: var(--f-d2);
-  margin-top: 0.25em;
-  padding: 0.25em 0.5rem;
-  width: 100%;
 }
 
 .ap-files-delete {
@@ -250,174 +260,67 @@ button {
   padding: 1.5rem 1.5rem 0.75rem;
 }
 
+/* ======== */
+/*  Panel  */
+/* ====== */
+
+.ap-panel {
+  position: relative;
+}
+
+.ap-panel.has-error {
+  opacity: 0.65;
+}
+
+.ap-panel[hidden] {
+  display: none;
+}
+
+.ap-panel__code {
+  grid-area: preview; /* on mobile, code coexists with preview */
+}
+
+@media (min-width: 600px) {
+  .ap-panel__code {
+    grid-area: code;
+  }
+}
+
+.ap-panel__js {
+  grid-area: preview;
+  position: relative;
+}
+
+.ap-panel__preview {
+  grid-area: preview;
+}
+
 /* =========== */
 /*  Preview   */
 /* ========= */
 
 .ap-preview {
-  display: flex;
-  flex-direction: column;
-  grid-area: preview;
-}
-
-.ap-preview-frame {
-  background: white;
-  flex-grow: 1;
-  width: 100%;
-  display: flex;
-}
-
-.ap-preview-html {
+  background-color: white;
   border: none;
-  flex-grow: 1;
+  height: 100%;
   width: 100%;
-}
-
-.ap-preview-has-error .ap-preview-frame {
-  opacity: 0.65;
-}
-
-.ap-preview-js {
-  padding: 0.25em 1.5em;
-  color: black;
-  flex-grow: 1;
-  width: 100%;
-  position: relative;
 }
 
 pre.shiki {
-  position: absolute;
-  top: 0;
-  right: 0;
   bottom: 0;
   left: 0;
   overflow: auto;
-  padding: 0.25em 1.5em;
-  padding-right: 4em;
-}
-
-.ap-preview-menu {
-  align-items: center;
-  display: flex;
   margin: 0;
-  padding: 0;
-}
-
-.ap-preview-switch {
-  align-items: center;
-  background-color: var(--t-bg-d1);
-  border-radius: 4rem;
-  border: 1px transparent solid;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  transition: background-color 75ms linear, border-color 75ms linear;
-  margin: 0 0.75em 0 0;
-  padding: 0.5em 0.75em;
-}
-
-.ap-preview-switch:hover {
-  background-color: var(--t-bg-u1);
-}
-
-.ap-preview-switch:focus {
-  border-color: var(--t-a);
-}
-
-.ap-preview-switch svg {
-  fill: rgba(255, 255, 255, 0.6);
-  margin: 0 0.25em;
-}
-
-.ap-preview-switch svg:first-of-type {
-  fill: var(--t-a);
-}
-
-.ap-preview-switch[aria-checked='true'] svg:first-of-type {
-  fill: rgba(255, 255, 255, 0.6);
-}
-
-.ap-preview-switch[aria-checked='true'] svg:last-of-type {
-  fill: var(--t-a);
-}
-
-.ap-preview-tab {
-  appearance: none;
-  background: none;
-  border-bottom: none;
-  border-left: none;
-  border-right: none;
-  border-top: 2px transparent solid;
-  color: inherit;
-  font-size: inherit;
-  padding: 0.5em 1em;
-  transition: background-color 50ms;
-}
-
-.ap-preview-tabwrapper {
-  position: relative;
-  display: block;
-}
-
-.ap-preview-tabwrapper + .ap-preview-tabwrapper {
-  border-left: 1px var(--t-bg-d1) solid;
-}
-
-.ap-preview-tabwrapper:last-of-type {
-  border-right: 1px var(--t-bg-d1) solid;
-}
-
-.ap-preview-tab:hover,
-.ap-preview-tab:focus {
-  background-color: var(--t-bg-u1);
-}
-
-.ap-preview-tab[aria-selected='true'] {
-  border-top-color: var(--t-a);
-}
-
-.ap-preview-tabs {
-  display: flex;
-  flex-grow: 0;
-  list-style: none;
-  margin: 0 auto 0 0;
-  padding: 0;
-  overflow-x: auto;
+  padding: 1.25rem;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .ap-preview-tabs svg {
   width: 1rem;
   height: 1rem;
   color: inherit;
-}
-
-.ap-preview-tabwrapper-add {
-  position: sticky;
-  right: 0;
-  background: var(--t-bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ap-tab-can-remove {
-  padding-right: 0.75em;
-}
-.ap-tab-can-remove .ap-preview-tab {
-  margin-right: 0.25em;
-  width: calc(100% + 0.75em);
-}
-
-.ap-tab-remove {
-  width: 1em;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  right: 0.5em;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 /* =========== */
@@ -453,8 +356,8 @@ pre.shiki {
   text-decoration: underline;
 }
 
-.ap-statusbar-error {
-  background: var(--c-orange);
+.ap-statusbar.has-error {
+  background: var(--t-error);
   padding: 0.25rem 0.5rem;
 }
 
@@ -464,4 +367,134 @@ pre.shiki {
 
 .ap-statusbar-time {
   margin-left: 0.25em;
+}
+
+/* ========= */
+/*  Switch  */
+/* ======= */
+
+.ap-switch {
+  align-items: center;
+  background-color: var(--t-bg-d1);
+  border-radius: 4rem;
+  border: 1px transparent solid;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  transition: background-color 75ms linear, border-color 75ms linear;
+  margin: 0 0.75em 0 0;
+  padding: 0.5em 0.75em;
+}
+
+.ap-switch:hover {
+  background-color: var(--t-bg-u1);
+}
+
+.ap-switch:focus {
+  border-color: var(--t-a);
+}
+
+.ap-switch svg {
+  fill: rgba(255, 255, 255, 0.6);
+  margin: 0 0.25em;
+}
+
+.ap-switch svg:first-of-type {
+  fill: var(--t-a);
+}
+
+.ap-switch[aria-checked='true'] svg:first-of-type {
+  fill: rgba(255, 255, 255, 0.6);
+}
+
+.ap-switch[aria-checked='true'] svg:last-of-type {
+  fill: var(--t-a);
+}
+
+/* =========== */
+/*  Tabgroup  */
+/* ========= */
+
+.ap-tabgroup {
+  display: flex;
+  margin: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 0;
+}
+
+.ap-tabgroup-action {
+  align-items: center;
+  display: flex;
+  height: var(--tab-height);
+  justify-content: center;
+  min-width: 2.75em;
+  transition: background-color 50ms linear;
+}
+
+.ap-tabgroup-action:hover {
+  background-color: var(--t-bg-u1);
+}
+
+.ap-tabgroup-remove {
+  align-items: center;
+  display: flex;
+  height: var(--tab-height);
+  justify-content: center;
+  opacity: 0.5;
+  padding: 0.375rem;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: opacity 50ms linear;
+  width: 1.75rem;
+}
+
+.ap-tabgroup-remove:hover {
+  opacity: 1;
+}
+
+.ap-tabgroup-tab {
+  align-items: center;
+  border-bottom: none;
+  border-left: none;
+  border-right: none;
+  border-top: 2px transparent solid;
+  color: inherit;
+  font-size: inherit;
+  padding: 0.5em 1em;
+  transition: background-color 50ms;
+  width: 100%;
+}
+
+.ap-tabgroup-tab:hover,
+.ap-tabgroup-tab:focus {
+  background-color: var(--t-bg-u1);
+}
+
+.ap-tabgroup-tabwrapper + .ap-tabgroup-tabwrapper {
+  border-left: 1px var(--t-bg-d1) solid;
+}
+
+.ap-tabgroup-tabwrapper:last-of-type {
+  border-right: 1px var(--t-bg-d1) solid;
+}
+
+.ap-tabgroup-tab[aria-selected='true'] {
+  border-top-color: var(--t-a);
+}
+
+.ap-tabgroup-tabwrapper {
+  display: flex;
+  position: relative;
+}
+
+.ap-tabgroup-tabwrapper.is-removable .ap-tabgroup-tab {
+  padding-right: 1.75rem;
+}
+
+@media (min-width: 600px) {
+  .ap-tabgroup-tab__mobile {
+    display: none;
+  }
 }
