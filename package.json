@@ -20,7 +20,7 @@
     "shorthash": "^0.0.2"
   },
   "dependencies": {
-    "@astrojs/compiler": "^0.1.0-canary.34",
+    "@astrojs/compiler": "^0.1.0-canary.35",
     "assert": "^2.0.0",
     "browser-builtins": "^3.3.1",
     "esbuild-wasm": "^0.12.22",
