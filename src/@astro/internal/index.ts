@@ -25,7 +25,6 @@ export async function renderPage(result: any, Component: AstroComponentFactory, 
 
 import { valueToEstree, Value } from 'estree-util-value-to-estree';
 import * as astring from 'astring';
-import shorthash from 'shorthash';
 const { generate, GENERATOR } = astring;
 // A more robust version alternative to `JSON.stringify` that can handle most values
 // see https://github.com/remcohaszing/estree-util-value-to-estree#readme
@@ -47,15 +46,20 @@ const serialize = (value: Value) =>
   });
 
 async function _render(child: any) {
-  // Special: If a child is a function, call it automatically.
-  // This lets you do {() => ...} without the extra boilerplate
-  // of wrapping it in a function and calling it.
-  if (typeof child === 'function') {
+  child = await child;
+  if (Array.isArray(child)) {
+    return (await Promise.all(child.map(value => _render(value)))).join('\n');
+  } else if (typeof child === 'function') {
+    // Special: If a child is a function, call it automatically.
+    // This lets you do {() => ...} without the extra boilerplate
+    // of wrapping it in a function and calling it.
     return await child();
   } else if (typeof child === 'string') {
     return child;
   } else if (!child && child !== 0) {
     // do nothing, safe to ignore falsey values.
+  } else if (child instanceof AstroComponent) {
+    return await renderAstroComponent(child);
   } else {
     return child;
   }
@@ -154,7 +158,7 @@ export const renderComponent = async (result: any, displayName: string, Componen
   Component = await Component;
   // children = await renderGenerator(children);
   if (Component && (Component as any).isAstroComponentFactory) {
-    const output = await renderAstroComponent(await (Component as any)(result, Component, _props, children))
+    const output = await renderToString(result, (Component as any), _props, children)
     return output;
   }
   // const { renderers } = result._metadata;

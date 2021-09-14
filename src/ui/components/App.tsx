@@ -27,7 +27,6 @@ const App: FunctionalComponent<Props> = ({ Monaco, esbuildWorker, astroWorker })
   const onAddTab = useCallback(() => {
     const basenames = models.map(model => model.uri.path.split('/').pop().slice(0, '.astro'.length * -1)).filter(c => c.startsWith('Component'));
     let filename = 'Component';
-    console.log(basenames);
     for (const basename of basenames) {
       if (basename === filename) {
         if (filename === 'Component') {
@@ -46,7 +45,6 @@ const name = "Component"
   }, [models])
 
   const onSetTab = (model) => {
-    console.log(model.uri.toString());
     setTab(model);
   }
 
