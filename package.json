@@ -5,19 +5,9 @@
   },
   "scripts": {
     "dev": "node -r esbuild-register scripts/build.ts --watch",
-    "build": "node -r esbuild-register scripts/build.ts"
-  },
-  "devDependencies": {
-    "@types/ms": "^0.7.31",
-    "@types/node": "^16.7.1",
-    "astring": "^1.7.5",
-    "buffer": "^6.0.3",
-    "esbuild": "^0.12.22",
-    "esbuild-register": "^3.0.0",
-    "estree-util-value-to-estree": "^1.2.0",
-    "globby": "^11.0.4",
-    "prettier": "^2.4.0",
-    "shorthash": "^0.0.2"
+    "build": "node -r esbuild-register scripts/build.ts",
+    "prestart": "npm run build",
+    "start": "npx serve dist"
   },
   "dependencies": {
     "@astrojs/compiler": "^0.1.0-canary.34",
@@ -32,5 +22,17 @@
     "shiki": "^0.9.10",
     "stream": "^0.0.2",
     "util": "^0.12.4"
+  },
+  "devDependencies": {
+    "@types/ms": "^0.7.31",
+    "@types/node": "^16.7.1",
+    "astring": "^1.7.5",
+    "buffer": "^6.0.3",
+    "esbuild": "^0.12.22",
+    "esbuild-register": "^3.0.0",
+    "estree-util-value-to-estree": "^1.2.0",
+    "globby": "^11.0.4",
+    "prettier": "^2.4.0",
+    "shorthash": "^0.0.2"
   }
 }

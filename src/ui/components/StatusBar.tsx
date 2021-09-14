@@ -22,7 +22,7 @@ const StatusBar: FunctionalComponent<Props> = ({ error, duration = 0 }) => {
     const [reason, ...messages] = error.toString().split(':');
     const message = messages.join(':');
     return (
-      <aside class="ap-statusbar ap-statusbar-error">
+      <aside class="ap-statusbar has-error">
         <div>
           <span id="status" class="ap-statusbar-status">
             {reason.trim()}
