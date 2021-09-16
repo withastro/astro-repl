@@ -1,7 +1,7 @@
 import type { editor as Editor } from 'monaco-editor';
 import path from 'path';
 import type { RefObject } from 'preact';
-import { editor, Range, Position } from 'monaco-editor';
+import { editor, Position } from 'monaco-editor';
 const { createModel } = editor;
 
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
@@ -60,14 +60,6 @@ const useMonaco = (Monaco: typeof import('../../editor/modules/monaco'), editorR
     setModels((models) => {
       return [...models, model];
     });
-    const openFrontmatter = models[0].findNextMatch('---\n', new Position(0, 0), false, false, ' \t\n', true);
-    const end = openFrontmatter.range.getEndPosition();
-    models[0].applyEdits([
-      {
-        range: new Range(end.lineNumber, end.column, end.lineNumber, end.column),
-        text: `import ${basename} from '@/${basename}.astro';\n`,
-      },
-    ]);
     setTab(model);
     return model;
   };
