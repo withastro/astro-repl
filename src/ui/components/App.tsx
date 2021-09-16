@@ -42,15 +42,11 @@ const App: FunctionalComponent<Props> = ({ Monaco, esbuildWorker, astroWorker })
       )
       .filter((c) => c.startsWith('Component'));
     let filename = 'Component';
-    for (const basename of basenames) {
-      if (basename === filename) {
-        if (filename === 'Component') {
-          filename = 'Component1';
-        } else {
-          const number = Number.parseInt(filename.replace(/^Component/, '')) + 1;
-          filename = `Component${number}`;
-        }
-      }
+    const sortedBasenames = basenames.sort()
+    if (sortedBasenames) {
+      const lastFilename = sortedBasenames.slice(-1)[0]
+      const number = Number.parseInt(filename.replace(/^Component/, '') || 0) + 1;
+      filename = `Component${number}`;
     }
     addTab(
       `---
