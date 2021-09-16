@@ -60,6 +60,14 @@ const useMonaco = (Monaco: typeof import('../../editor/modules/monaco'), editorR
     setModels((models) => {
       return [...models, model];
     });
+    const openFrontmatter = models[0].findNextMatch('---\n', new Position(0, 0), false, false, ' \t\n', true);
+    const end = openFrontmatter.range.getEndPosition();
+    models[0].applyEdits([
+      {
+        range: new Range(end.lineNumber, end.column, end.lineNumber, end.column),
+        text: `// import ${basename} from '@/${basename}.astro';\n`,
+      },
+    ]);
     setTab(model);
     return model;
   };
