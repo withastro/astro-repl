@@ -50,7 +50,7 @@ const App: FunctionalComponent<Props> = ({ Monaco, esbuildWorker, astroWorker })
     }
     addTab(
       `---
-const name = "Component"
+const name = "${filename}"
 ---
 
 <h1>Hello {name}</h1>`,
