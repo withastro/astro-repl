@@ -10,7 +10,7 @@
     "start": "npx serve dist"
   },
   "dependencies": {
-    "@astrojs/compiler": "^0.1.0-canary.35",
+    "@astrojs/compiler": "^0.1.0-canary.36",
     "assert": "^2.0.0",
     "browser-builtins": "^3.3.1",
     "esbuild-wasm": "^0.12.22",
