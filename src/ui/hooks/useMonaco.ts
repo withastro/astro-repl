@@ -1,7 +1,7 @@
 import type { editor as Editor } from 'monaco-editor';
 import path from 'path';
 import type { RefObject } from 'preact';
-import { editor, Position } from 'monaco-editor';
+import { editor, Range, Position } from 'monaco-editor';
 const { createModel } = editor;
 
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
