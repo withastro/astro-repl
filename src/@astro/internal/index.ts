@@ -154,6 +154,13 @@ setup("${astroId}", {${metadata.hydrateArgs ? `value: ${JSON.stringify(metadata.
   return hydrationScript;
 }
 
+export const renderSlot = async (result: any, slotted: string, fallback?: any) => {
+  if (slotted) {
+    return _render(slotted);
+  }
+  return fallback;
+};
+
 export const renderComponent = async (result: any, displayName: string, Component: unknown, _props: Record<string | number, any>, children: any) => {
   Component = await Component;
   // children = await renderGenerator(children);
