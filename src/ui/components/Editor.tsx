@@ -20,7 +20,7 @@ export interface Props {
 }
 
 const Editor = forwardRef<HTMLElement, Props>(
-  ({ models, currentModel, currentTab, onAddTab = noop, onRemoveTab = noop, onSetTab = noop, ...props }, editorRef) => {
+  ({ models, currentModel, currentTab, onAddTab = noop, onRemoveTab = noop, onSetTab = noop, children, ...props }, editorRef) => {
     const { isDesktop } = useWindowSize();
 
     return (

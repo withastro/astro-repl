@@ -493,6 +493,25 @@ pre.shiki {
   padding-right: 1.75rem;
 }
 
+.ap-tabgroup-tabwrapper--share {
+  background-color: var(--c-orange);
+  margin-left: auto;
+}
+
+#share {
+  font-size: 1rem;
+  display: flex;
+  padding: 0.25rem 1rem;
+  color: white;
+}
+
+#share svg {
+  width: 1em;
+  height: 1em;
+  margin-left: 0.5em;
+}
+
+
 @media (min-width: 600px) {
   .ap-tabgroup-tab__mobile {
     display: none;

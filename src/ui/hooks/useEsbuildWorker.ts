@@ -4,10 +4,20 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 
 import { renderAstroToHTML } from '../../utils';
 
-const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneCodeEditor>, deps: any[]) => {
+const useWorker = (worker: Worker, editorInstance: RefObject<Editor.IStandaloneCodeEditor>, models: Editor.IModel[], deps: any[]) => {
   const trackedValue = useRef('');
   const [html, setHtml] = useState('');
   const [err, setErr] = useState(null);
+
+  useEffect(() => {
+    if (models.length > 0) {
+      for (const model of models) {
+        const filename = model.uri.path;
+        const value = model.getValue();
+        worker.postMessage(JSON.stringify({ filename, value }));
+      }
+    }
+  }, [models])
 
   useEffect(() => {
     if (!editorInstance.current) return;

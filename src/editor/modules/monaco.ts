@@ -1,4 +1,4 @@
-// import { editor as Editor, languages } from "monaco-editor";
+import type { editor as Editor } from "monaco-editor";
 
 import 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
 // import 'monaco-editor/esm/vs/language/css/monaco.contribution';
@@ -97,7 +97,7 @@ const name = "world"
 </html>
 `;
 
-export const build = (inputEl: HTMLElement) => {
+export const build = (inputEl: HTMLElement, initialModels: Record<string, string> = {}) => {
     let editorInstance: Editor.IStandaloneCodeEditor;
 
     register();
@@ -189,8 +189,14 @@ export const build = (inputEl: HTMLElement) => {
         lineNumbers: "on"
     });
 
-    const indexModel = Editor.createModel(initialValue, 'astro', Uri.parse("inmemory://model/src/pages/Page.astro"))
-    editorInstance.setModel(indexModel);
+    let models: Editor.IModel[] = [];
+    for (const [uri, value] of Object.entries(initialModels)) {
+        models.push(Editor.createModel(value, 'astro', Uri.parse(uri)));
+    }
+    if (Object.keys(initialModels).length === 0) {
+        models.push(Editor.createModel(initialValue, 'astro', Uri.parse("inmemory://model/src/pages/Page.astro")))
+    }
+    editorInstance.setModel(models[0]);
 
-    return editorInstance;
+    return { editor: editorInstance, models };
 };
