@@ -26,7 +26,7 @@ export async function renderAstroToHTML(content: string): Promise<string | { err
             // const canonicalURL = getCanonicalURL(pathname, astroConfig.buildOptions.site || origin)
             return { isPage: true, site: url, request: { url, canonicalURL: url }, props };
         },
-    }, await mod, {}, null);
+    }, await mod, {}, {});
     } catch (e) {
         return {
             errors: [e]
