@@ -1,12 +1,12 @@
 import type { editor as Editor } from 'monaco-editor';
 import path from 'path';
 import type { RefObject } from 'preact';
-import { editor, Range, Position } from 'monaco-editor';
+import { editor, Range, Position, Uri } from 'monaco-editor';
 const { createModel } = editor;
 
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 
-const useMonaco = (Monaco: typeof import('../../editor/modules/monaco'), editorRef: RefObject<HTMLElement | null>) => {
+const useMonaco = (Monaco: typeof import('../../editor/modules/monaco'), editorRef: RefObject<HTMLElement | null>, initialModels: Record<string, string>) => {
   const editorInstance = useRef<Editor.IStandaloneCodeEditor>();
   const [value, setValue] = useState(null);
   const viewStates = useRef<Record<string, Editor.ICodeEditorViewState>>({});
@@ -91,13 +91,13 @@ const useMonaco = (Monaco: typeof import('../../editor/modules/monaco'), editorR
   );
 
   useEffect(() => {
-    if (editorRef && !editorInstance.current) {
-      editorInstance.current = Monaco.build(editorRef.current);
-      const model = editorInstance.current.getModel();
-      previousModels.current = [model];
-      setModels([model]);
-      setCurrentModel(model);
-      setTab(model);
+    if (editorRef && !editorInstance.current && initialModels) {
+      const { editor, models } = Monaco.build(editorRef.current, initialModels);
+      editorInstance.current = editor;
+      previousModels.current = [...models];
+      setModels([...models]);
+      setCurrentModel(models[0]);
+      setTab(models[0]);
     }
   }, []);
 

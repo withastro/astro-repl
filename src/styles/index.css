@@ -266,6 +266,7 @@ button {
 
 .ap-panel {
   position: relative;
+  transform: translateZ(0); /* paint optimization: render each panel on separate composite layers (reduce repaints) */
 }
 
 .ap-panel.has-error {
@@ -419,7 +420,6 @@ pre.shiki {
   display: flex;
   margin: 0;
   max-width: 100%;
-  overflow-x: auto;
   padding: 0;
 }
 
@@ -452,6 +452,10 @@ pre.shiki {
 
 .ap-tabgroup-remove:hover {
   opacity: 1;
+}
+
+.ap-tabgroup__scrollable {
+  overflow-x: auto;
 }
 
 .ap-tabgroup-tab {
@@ -493,8 +497,66 @@ pre.shiki {
   padding-right: 1.75rem;
 }
 
+.ap-tabgroup-tabwrapper--share {
+  background-color: var(--c-orange);
+  margin-left: auto;
+}
+
+#share {
+  color: white;
+  cursor: pointer;
+  display: flex;
+  font-size: 1rem;
+  padding: 0.25rem 1rem;
+  text-align: center;
+  transition: filter 50ms linear;
+}
+
+#share:focus,
+#share:hover {
+  background-color: var(--c-orange);
+  filter: brightness(1.5);
+}
+
+#share svg {
+  height: 1em;
+  margin-left: 0.5em;
+  width: 1em;
+}
+
 @media (min-width: 600px) {
   .ap-tabgroup-tab__mobile {
     display: none;
   }
+}
+
+/* ========== */
+/*  Tooltip  */
+/* ======== */
+
+.ap-tooltip {
+  background-color: var(--t-bg);
+  border-radius: 5px;
+  color: var(--t-fg);
+  font-size: var(--f-d1);
+  opacity: 0;
+  padding: 0.25em 0.5em;
+  pointer-events: none;
+  position: absolute;
+  right: 0.75rem;
+  top: calc(100% + 0.75rem);
+  transition: opacity 150ms linear, visibility 0ms 150ms;
+  visibility: hidden;
+  z-index: 1000;
+}
+
+.ap-tooltip-wrapper {
+  position: relative;
+  z-index: 1000;
+}
+
+.ap-tooltip-wrapper[data-tooltip='true'] .ap-tooltip {
+  opacity: 1;
+  transition: opacity 150ms linear;
+  visibility: visible;
 }

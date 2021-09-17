@@ -8,7 +8,7 @@ export interface Props {
   error?: Error;
 }
 
-const StatusBar: FunctionalComponent<Props> = ({ error, duration = 0 }) => {
+const StatusBar: FunctionalComponent<Props> = ({ error, children, duration = 0 }) => {
   const compilerVersion = pkg.dependencies['@astrojs/compiler'].slice(1);
   const Version = () => (
     <div>
@@ -31,7 +31,7 @@ const StatusBar: FunctionalComponent<Props> = ({ error, duration = 0 }) => {
             {message.trim()}
           </span>
         </div>
-
+        {children}
         <Version />
       </aside>
     );

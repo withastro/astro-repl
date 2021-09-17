@@ -8,7 +8,7 @@ export interface Props {
   setCurrentTab: (val: keyof typeof TABS) => void;
 }
 
-const Menu: FunctionalComponent<Props> = ({ currentTab, setCurrentTab }) => {
+const Menu: FunctionalComponent<Props> = ({ currentTab, setCurrentTab, children }) => {
   const { isDesktop } = useWindowSize();
 
   // if window is expanding from mobile -> desktop, make sure code AND preview are shown side-by-side (no need for desktop -> mobile)
@@ -85,6 +85,7 @@ const Menu: FunctionalComponent<Props> = ({ currentTab, setCurrentTab }) => {
       </svg>
     </button>
   </div> */}
+    {children}
     </menu>
   );
 };
