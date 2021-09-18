@@ -81,18 +81,49 @@ import TYPESCRIPT_WORKER_URL from "worker:../workers/typescript.ts";
 import EDITOR_WORKER_URL from "worker:../workers/editor.ts";
 
 export const initialValue = `---
-const name = "world"
----
+// Astro Component Script:
+// Write any JavaScript (or TypeScript) that you'd like here.
+// It will run during the build, never in the final output.
+// Use these variables in the HTML template below.
+//
+// Full Syntax:
+// https://docs.astro.build/core-concepts/astro-components/
+import {format} from 'date-fns'; 
 
-<!DOCTYPE html>
-<html>
+const builtAt = new Date();
+const builtAtFormatted = format(builtAt, 'MMMM dd, yyyy -- H:mm:ss.SSS');
+---
+<html lang="en">
   <head>
-    <title>Hello {name}</title>
+    <meta charset="UTF-8">
+    <title>Astro Playground</title>
+    <style>
+      header {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-top: 15vh;
+        font-family: Arial;
+      }
+      .note {
+        margin: 0;
+        padding: 1rem;
+        border-radius: 8px;
+        background: #E4E5E6;
+        border: 1px solid #BBB;
+      }
+    </style>
   </head>
   <body>
-    <main>
-      <h1>Hello {name}</h1>
-    </main>
+    <header>
+      <img width="60" height="80" src="https://bestofjs.org/logos/astro.svg" alt="Astro logo">
+      <h1>Hello, Astro!</h1>
+      <p class="note">
+        <strong>RENDERED AT:</strong><br/>
+        {builtAtFormatted}
+      </p>
+    </header>
   </body>
 </html>
 `;
