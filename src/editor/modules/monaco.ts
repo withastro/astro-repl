@@ -81,16 +81,17 @@ import TYPESCRIPT_WORKER_URL from "worker:../workers/typescript.ts";
 import EDITOR_WORKER_URL from "worker:../workers/editor.ts";
 
 export const initialValue = `---
-// Astro Component Script:
-// Write any JavaScript (or TypeScript) that you'd like here.
-// It will run during the build, never in the final output.
+import {format} from 'date-fns'; 
+
+// Welcome to Astro!
+// Write JavaScript & TypeScript here, in the "component script."
+// This will run during the build, but never in the final output.
 // Use these variables in the HTML template below.
 //
 // Full Syntax:
 // https://docs.astro.build/core-concepts/astro-components/
-import {format} from 'date-fns'; 
 
-const builtAt = new Date();
+const builtAt: Date = new Date();
 const builtAtFormatted = format(builtAt, 'MMMM dd, yyyy -- H:mm:ss.SSS');
 ---
 <html lang="en">
@@ -209,14 +210,13 @@ export const build = (inputEl: HTMLElement, initialModels: Record<string, string
             useShadows: false,
             vertical: "auto",
         },
-        wordWrap: "on",
+        wordWrap: "off",
         "roundedSelection": true,
         "scrollBeyondLastLine": false,
         smoothScrolling: true,
         theme: "dark",
         automaticLayout: true,
         language: "astro",
-
         lineNumbers: "on"
     });
 
