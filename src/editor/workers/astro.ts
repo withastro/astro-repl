@@ -17,7 +17,24 @@ const init = async () => {
     }
 }
 
+interface TimingObject {
+    init?: number;
+    compile?: number;
+    format?: number;
+    highlight?: number;
+    total?: number;
+    __current: number;
+}
+function timestamp(timing: TimingObject, tag: keyof TimingObject) {
+    timing[tag as any] = performance.now() - timing.__current;
+    timing.__current = performance.now();
+}
+function createTimestamp(): TimingObject { 
+    return {__current: performance.now()};
+}
+
 self.onmessage = async ({ data }) => {
+    const timing = createTimestamp();
     data = JSON.parse(data);
     let filename: string = `${data.filename}`;
     let input: string = `${data.value}`;
@@ -26,14 +43,17 @@ self.onmessage = async ({ data }) => {
     if (!_initialized) {
         await init();
     }
-
+    timestamp(timing, 'init');
     try {
         content = await transform(input, { sourcefile: filename, internalURL: 'astro/internal', sourcemap: false }).then(res => res.code);
+        timestamp(timing, 'compile');
         content = prettier.format(content, {
             parser: 'babel',
             plugins: [parserBabel]
         })
+        timestamp(timing, 'format');
         content = highlighter.codeToHtml(content, 'ts');
+        timestamp(timing, 'highlight');
     } catch (error) {
         post({
             type: `astro transform error`,
@@ -41,8 +61,9 @@ self.onmessage = async ({ data }) => {
         });
         return;
     }
-
+    timestamp(timing, 'total');
     post({
-        value: { content, input }
+        value: { content, input },
+        timing,
     });
 };

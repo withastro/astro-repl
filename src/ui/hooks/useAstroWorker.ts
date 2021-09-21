@@ -34,11 +34,10 @@ const useAstroWorker = (worker: Worker, editorInstance: RefObject<Editor.IStanda
         // fileSizeEl.textContent = `Error`;
         return;
       }
-
       let { content, input } = data.value;
       if (trackedValue.current.value === input) {
         setJs(content)
-        setSpan(performance.now() - trackedValue.current.start);
+        setSpan(data.timing.compile);
       }
     }
     worker.onmessage = handleMessage;
