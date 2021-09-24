@@ -6,6 +6,7 @@ import { Uri } from 'monaco-editor';
 
 import Editor from './Editor';
 import JS from './JS';
+import HTML from './HTML';
 import Menu from './Menu';
 import Preview from './Preview';
 import StatusBar from './StatusBar';
@@ -86,6 +87,7 @@ const name = "Component"
         ref={editorRef}
       />
       <Preview currentTab={currentTab} hasError={!!error} html={html} />
+      <HTML currentTab={currentTab} hasError={!!error} html={html} />
       <JS currentTab={currentTab} hasError={!!error} code={js} />
       <StatusBar error={error} duration={duration} />
     </>

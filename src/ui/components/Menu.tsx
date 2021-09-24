@@ -46,6 +46,19 @@ const Menu: FunctionalComponent<Props> = ({ currentTab, setCurrentTab, children 
       </div>
       <div class="ap-tabgroup-tabwrapper">
         <button
+          aria-controls="panel-html"
+          aria-selected={currentTab === TABS.HTML}
+          class="ap-tabgroup-tab"
+          id="tab-preview"
+          onClick={() => setCurrentTab(TABS.HTML)}
+          role="tab"
+          type="button"
+        >
+          HTML
+        </button>
+      </div>
+      <div class="ap-tabgroup-tabwrapper">
+        <button
           aria-controls="panel-js"
           aria-selected={currentTab === TABS.JS}
           class="ap-tabgroup-tab"
