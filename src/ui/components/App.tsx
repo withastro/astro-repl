@@ -6,6 +6,7 @@ import { Uri } from 'monaco-editor';
 
 import Editor from './Editor';
 import JS from './JS';
+import HTML from './HTML';
 import Menu from './Menu';
 import Preview from './Preview';
 import StatusBar from './StatusBar';
@@ -13,6 +14,7 @@ import Share from './Share';
 import useMonaco from '../hooks/useMonaco';
 import useEsbuildWorker from '../hooks/useEsbuildWorker';
 import useAstroWorker from '../hooks/useAstroWorker';
+import useHtmlWorker from '../hooks/useHtmlWorker';
 import { TABS } from '../const';
 import useWindowSize from '../hooks/useWindowSize';
 
@@ -20,14 +22,16 @@ export interface Props {
   Monaco: typeof import('../../editor/modules/monaco');
   esbuildWorker: Worker;
   astroWorker: Worker;
+  htmlWorker: Worker;
   initialModels?: Record<string, string>
 }
 
-const App: FunctionalComponent<Props> = ({ Monaco, esbuildWorker, astroWorker, initialModels = {} }) => {
+const App: FunctionalComponent<Props> = ({ Monaco, esbuildWorker, astroWorker, htmlWorker, initialModels = {} }) => {
   const editorRef = useRef<HTMLElement | null>(null);
   const { editor, models, currentModel, value, setTab, addTab, removeTab } = useMonaco(Monaco, editorRef, initialModels);
   const { html, error } = useEsbuildWorker(esbuildWorker, editor, models, [value]);
   const { js, duration } = useAstroWorker(astroWorker, editor, [value]);
+  const { html: formattedHtml } = useHtmlWorker(htmlWorker, html);
   const { isDesktop } = useWindowSize();
   const [currentTab, setCurrentTab] = useState<TabName>(isDesktop ? TABS.PREVIEW : TABS.CODE);
 
@@ -86,6 +90,7 @@ const name = "Component"
         ref={editorRef}
       />
       <Preview currentTab={currentTab} hasError={!!error} html={html} />
+      <HTML currentTab={currentTab} hasError={!!error} html={formattedHtml} />
       <JS currentTab={currentTab} hasError={!!error} code={js} />
       <StatusBar error={error} duration={duration} />
     </>

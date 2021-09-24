@@ -296,6 +296,26 @@ button {
   grid-area: preview;
 }
 
+.ap-panel__html {
+  grid-area: preview;
+  background: white;
+  margin: 0;
+  padding: 1.25rem;
+  color: var(--c-navy);
+  overflow-x: auto;
+  display: flex;
+}
+
+.ap-panel__html::after {
+  display: block;
+  content: "";
+  width: 4rem;
+}
+
+.ap-panel__html pre {
+  margin: 0;
+}
+
 /* =========== */
 /*  Preview   */
 /* ========= */
@@ -506,6 +526,8 @@ pre.shiki {
   color: white;
   cursor: pointer;
   display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1rem;
   padding: 0.25rem 1rem;
   text-align: center;
@@ -520,7 +542,8 @@ pre.shiki {
 
 #share svg {
   height: 1em;
-  margin-left: 0.5em;
+  margin-left: 0.33em;
+  margin-right: -0.33em;
   width: 1em;
 }
 
