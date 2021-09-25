@@ -10,6 +10,7 @@
     "start": "npx serve dist"
   },
   "dependencies": {
+    "@amoutonbrady/lz-string": "^0.0.1",
     "@astrojs/compiler": "^0.1.0-canary.46",
     "assert": "^2.0.0",
     "browser-builtins": "^3.3.1",
