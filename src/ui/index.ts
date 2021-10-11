@@ -1,7 +1,7 @@
 import type { editor as Editor } from 'monaco-editor';
 
 import { h, render } from 'preact';
-import App, { Props as AppProps } from './components/App.tsx';
+import App, { Props as AppProps } from './components/App';
 
 const hydrate = (props: AppProps) => {
   const app = document.querySelector('#app');

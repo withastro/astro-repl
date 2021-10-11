@@ -1,3 +1,4 @@
+// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/wasm.ts
 import path from 'path';
 import { fs } from "memfs";
 
@@ -42,11 +43,11 @@ export const WASM = (): Plugin => {
             // the JavaScript code for compiling the WebAssembly binary. The
             // binary itself is imported from a second virtual module.
             build.onLoad({ filter: /.*/, namespace: WASM_STUB_NAMESPACE }, async (args) => ({
-                contents: `
-                import wasm from ${JSON.stringify(args.path)}
-                export default (imports) =>
-                WebAssembly.instantiate(wasm, imports).then(
-                    result => result.instance.exports)`,
+                contents: `\
+import wasm from ${JSON.stringify(args.path)}
+export default (imports) =>
+WebAssembly.instantiate(wasm, imports).then(
+    result => result.instance.exports)`,
             }))
 
             // Virtual modules in the "wasm-binary" namespace contain the

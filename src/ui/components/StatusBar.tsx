@@ -5,7 +5,7 @@ import pkg from '../../../package.json';
 
 export interface Props {
   duration: number;
-  error?: Error;
+  error?: string;
 }
 
 const StatusBar: FunctionalComponent<Props> = ({ error, children, duration = 0 }) => {

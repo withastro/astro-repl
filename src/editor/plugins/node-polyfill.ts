@@ -1,3 +1,4 @@
+// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/node-polyfill.ts
 import type { Plugin } from 'esbuild';
 
 import { HTTP_NAMESPACE } from './http';

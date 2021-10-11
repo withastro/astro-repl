@@ -1,74 +1,73 @@
-import type { editor as Editor } from "monaco-editor";
+// import type { editor as Editor } from "monaco-editor";
+import "../../../node_modules/monaco-editor/esm/vs/language/typescript/monaco.contribution.js";
 
-import 'monaco-editor/esm/vs/language/typescript/monaco.contribution';
+import "../../../node_modules/monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/iPadShowKeyboard/iPadShowKeyboard.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/quickAccess/standaloneCommandsQuickAccess.js";
+
+import "../../../node_modules/monaco-editor/esm/vs/editor/browser/controller/coreCommands.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/bracketMatching/bracketMatching.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/caretOperations/caretOperations.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/clipboard/clipboard.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/codeAction/codeActionContributions.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/comment/comment.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/contextmenu/contextmenu.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/cursorUndo/cursorUndo.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/dnd/dnd.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/find/findController.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/folding/folding.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/fontZoom/fontZoom.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/format/formatActions.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/gotoSymbol/link/goToDefinitionAtPosition.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/hover/hover.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/indentation/indentation.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/inlayHints/inlayHintsController.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/linesOperations/linesOperations.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/links/links.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/multicursor/multicursor.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/parameterHints/parameterHints.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/rename/rename.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/smartSelect/smartSelect.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/suggest/suggestController.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/tokenization/tokenization.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/toggleTabFocusMode/toggleTabFocusMode.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/unusualLineTerminators/unusualLineTerminators.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/viewportSemanticTokens/viewportSemanticTokens.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/wordHighlighter/wordHighlighter.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/wordOperations/wordOperations.js";
+import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/wordPartOperations/wordPartOperations.js";
+
+// Load up these strings even in VSCode, even if they are not used
+// in order to get them translated
+import "../../../node_modules/monaco-editor/esm/vs/editor/common/standaloneStrings.js";
+import "../../../node_modules/monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles.js"; // The codicons are defined here and must be loaded
+
+// import { editor as Editor, languages } from "monaco-editor";
 // import 'monaco-editor/esm/vs/language/css/monaco.contribution';
 // import 'monaco-editor/esm/vs/language/json/monaco.contribution';
 // import 'monaco-editor/esm/vs/language/html/monaco.contribution';
-
 // import 'monaco-editor/esm/vs/basic-languages/monaco.contribution.js';
-import 'monaco-editor/esm/vs/basic-languages/typescript/typescript.contribution';
 
 // export * from 'monaco-editor/esm/vs/editor/edcore.main';
-
-// import '../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/accessibilityHelp/accessibilityHelp.js';
-import 'monaco-editor/esm/vs/editor/standalone/browser/iPadShowKeyboard/iPadShowKeyboard';
-// import '../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/inspectTokens/inspectTokens.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/quickAccess/standaloneHelpQuickAccess.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/quickAccess/standaloneGotoLineQuickAccess.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/quickAccess/standaloneGotoSymbolQuickAccess.js';
-import 'monaco-editor/esm/vs/editor/standalone/browser/quickAccess/standaloneCommandsQuickAccess';
-// import '../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/referenceSearch/standaloneReferenceSearch.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/toggleHighContrast/toggleHighContrast.js';
-
-import 'monaco-editor/esm/vs/editor/browser/controller/coreCommands';
-// import '../../node_modules/monaco-editor/esm/vs/editor/browser/widget/codeEditorWidget.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/browser/widget/diffEditorWidget.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/browser/widget/diffNavigator.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/anchorSelect/anchorSelect.js';
-import 'monaco-editor/esm/vs/editor/contrib/bracketMatching/bracketMatching';
-import 'monaco-editor/esm/vs/editor/contrib/caretOperations/caretOperations';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/caretOperations/transpose.js';
-import 'monaco-editor/esm/vs/editor/contrib/clipboard/clipboard';
-import 'monaco-editor/esm/vs/editor/contrib/codeAction/codeActionContributions';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/codelens/codelensController.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/colorPicker/colorContributions.js';
-import 'monaco-editor/esm/vs/editor/contrib/comment/comment';
-import 'monaco-editor/esm/vs/editor/contrib/contextmenu/contextmenu';
-import 'monaco-editor/esm/vs/editor/contrib/cursorUndo/cursorUndo';
-import 'monaco-editor/esm/vs/editor/contrib/dnd/dnd';
-import 'monaco-editor/esm/vs/editor/contrib/find/findController';
-import 'monaco-editor/esm/vs/editor/contrib/folding/folding';
-import 'monaco-editor/esm/vs/editor/contrib/fontZoom/fontZoom';
-import 'monaco-editor/esm/vs/editor/contrib/format/formatActions';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/documentSymbols/documentSymbols.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/inlineCompletions/ghostTextController.js';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/gotoSymbol/goToCommands.js';
-import 'monaco-editor/esm/vs/editor/contrib/gotoSymbol/link/goToDefinitionAtPosition';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/gotoError/gotoError.js';
-import 'monaco-editor/esm/vs/editor/contrib/hover/hover';
-import 'monaco-editor/esm/vs/editor/contrib/indentation/indentation';
-import 'monaco-editor/esm/vs/editor/contrib/inlayHints/inlayHintsController';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/inPlaceReplace/inPlaceReplace.js';
-import 'monaco-editor/esm/vs/editor/contrib/linesOperations/linesOperations';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/linkedEditing/linkedEditing.js';
-import 'monaco-editor/esm/vs/editor/contrib/links/links';
-import 'monaco-editor/esm/vs/editor/contrib/multicursor/multicursor';
-import 'monaco-editor/esm/vs/editor/contrib/parameterHints/parameterHints';
-import 'monaco-editor/esm/vs/editor/contrib/rename/rename';
-import 'monaco-editor/esm/vs/editor/contrib/smartSelect/smartSelect';
-// import '../../node_modules/monaco-editor/esm/vs/editor/contrib/snippet/snippetController2.js';
-import 'monaco-editor/esm/vs/editor/contrib/suggest/suggestController';
-import 'monaco-editor/esm/vs/editor/contrib/tokenization/tokenization';
-import 'monaco-editor/esm/vs/editor/contrib/toggleTabFocusMode/toggleTabFocusMode';
-import 'monaco-editor/esm/vs/editor/contrib/unusualLineTerminators/unusualLineTerminators';
-import 'monaco-editor/esm/vs/editor/contrib/viewportSemanticTokens/viewportSemanticTokens';
-import 'monaco-editor/esm/vs/editor/contrib/wordHighlighter/wordHighlighter';
-import 'monaco-editor/esm/vs/editor/contrib/wordOperations/wordOperations';
-import 'monaco-editor/esm/vs/editor/contrib/wordPartOperations/wordPartOperations';
-// Load up these strings even in VSCode, even if they are not used
-// in order to get them translated
-// import '../../node_modules/monaco-editor/esm/vs/editor/common/standaloneStrings.js';
-import 'monaco-editor/esm/vs/base/browser/ui/codicons/codiconStyles'; // The codicons are defined here and must be loaded
+// import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/accessibilityHelp/accessibilityHelp.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/inspectTokens/inspectTokens.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/quickAccess/standaloneHelpQuickAccess.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/quickAccess/standaloneGotoLineQuickAccess.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/quickAccess/standaloneGotoSymbolQuickAccess.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/referenceSearch/standaloneReferenceSearch.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/standalone/browser/toggleHighContrast/toggleHighContrast.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/browser/widget/codeEditorWidget.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/browser/widget/diffEditorWidget.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/browser/widget/diffNavigator.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/anchorSelect/anchorSelect.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/caretOperations/transpose.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/codelens/codelensController.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/colorPicker/colorContributions.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/documentSymbols/documentSymbols.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/inlineCompletions/ghostTextController.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/gotoSymbol/goToCommands.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/gotoError/gotoError.js";
+// import "../../../node_modules/monaco-editor/esm/vs/editor/contrib/inPlaceReplace/inPlaceReplace.js";
 
 import { editor as Editor, languages, editor, Uri } from 'monaco-editor';
 import { register } from './monaco-astro';
@@ -79,6 +78,8 @@ import GithubDark from "../themes/github-dark";
 
 import TYPESCRIPT_WORKER_URL from "worker:../workers/typescript.ts";
 import EDITOR_WORKER_URL from "worker:../workers/editor.ts";
+
+import { WebWorker } from "../../utils/WebWorker";
 
 export const initialValue = `---
 import {format} from 'date-fns'; 
@@ -130,104 +131,183 @@ const builtAtFormatted = format(builtAt, 'MMMM dd, yyyy -- H:mm:ss.SSS');
 `;
 
 export const build = (inputEl: HTMLElement, initialModels: Record<string, string> = {}) => {
-    let editorInstance: Editor.IStandaloneCodeEditor;
+  let editorInstance: Editor.IStandaloneCodeEditor;
 
-    register();
-    languages.typescript.javascriptDefaults.setEagerModelSync(true);
-    languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-        noSemanticValidation: true,
-        noSyntaxValidation: false,
-        noSuggestionDiagnostics: false
-    });
+  register();
+  languages.typescript.javascriptDefaults.setEagerModelSync(true);
+  languages.typescript.typescriptDefaults.setDiagnosticsOptions({
+    noSemanticValidation: true,
+    noSyntaxValidation: false,
+    noSuggestionDiagnostics: false
+  });
 
-    // Compiler options
-    languages.typescript.typescriptDefaults.setCompilerOptions({
-        "moduleResolution": languages.typescript.ModuleResolutionKind.NodeJs,
-        "target": languages.typescript.ScriptTarget.ES2020,
-        "module": languages.typescript.ModuleKind.ES2015,
-        "noEmit": true,
-        "lib": [
-            "esnext",
-            "dom",
-            "node"
-        ],
-        "exclude": ["node_modules"],
-        "resolveJsonModule": true,
-        "isolatedModules": true,
-        "allowNonTsExtensions": true,
-        "esModuleInterop": true,
-        "noResolve": true
-    });
+  // Compiler options
+  languages.typescript.typescriptDefaults.setCompilerOptions({
+    "moduleResolution": languages.typescript.ModuleResolutionKind.NodeJs,
+    "target": languages.typescript.ScriptTarget.Latest,
+    "module": languages.typescript.ModuleKind.ES2015,
+    "noEmit": true,
+    "lib": ["es2021", "dom", "dom.iterable", "webworker", "esnext", "node"],
+    "exclude": ["node_modules"],
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowNonTsExtensions": true,
+    "esModuleInterop": true,
+    "noResolve": true,
+    "allowSyntheticDefaultImports": true
+  });
 
-    // Read this on adding autocomplete to monaco:
-    // https://blog.expo.io/building-a-code-editor-with-monaco-f84b3a06deaf
-    // and
-    // https://mono.software/2017/04/11/custom-intellisense-with-monaco-editor/
-    // languages.registerHoverProvider('typescript', {
-    //     provideHover: function (model, position) {
-    //         // return xhr('../playground.html').then(function (res) {
-    //         //     return {
-    //         //         range: new Range(1, 1, model.getLineCount(), model.getLineMaxColumn(model.getLineCount())),
-    //         //         contents: [
-    //         //             { value: '**SOURCE**' },
-    //         //             { value: '```html\n' + res.responseText.substring(0, 200) + '\n```' }
-    //         //         ]
-    //         //     }
-    //         // });
-    //     }
-    // });
+  const parseInput = (value: string) => {
+      const host = "https://api.npms.io";
+      let urlScheme = `${host}/v2/search?q=${encodeURIComponent(
+          value
+      )}&size=30`;
+      let version = "";
 
-    // Since packaging is done by you, you need
-    // to instruct the editor how you named the
-    // bundles that contain the web workers.
-    (window as any).MonacoEnvironment = {
-        getWorker: function (moduleId, label) {
-            if (label === "typescript" || label === "javascript") {
-                return new Worker(TYPESCRIPT_WORKER_URL, {
-                    name: `${label}-worker`,
-                    type: 'module'
-                });
-            }
+      let exec = /([\S]+)@([\S]+)/g.exec(value);
+      if (exec) {
+          let [, pkg, ver] = exec;
+          version = ver;
+          urlScheme = `${host}/v2/search?q=${encodeURIComponent(
+              pkg
+          )}&size=30`;
+      }
 
-            return new Worker(EDITOR_WORKER_URL, {
-                name: "editor-worker",
-                type: 'module'
-            });
-        },
-    };
+      return { url: urlScheme, version };
+  };
+
+  const IMPORTS_REXPORTS_REQUIRE_REGEX =
+      /(?:(?:import|export|require)(?:.)*?(?:from\s+|\((?:\s+)?)["']([^"']+)["'])\)?/g;
+  const FetchCache = new Map();
+
+  languages.registerHoverProvider("astro", {
+      provideHover(model, position) {
+          let content = model.getLineContent(position.lineNumber);
+          let matches =
+              Array.from(content.matchAll(IMPORTS_REXPORTS_REQUIRE_REGEX)) ??
+              [];
+          if (matches.length <= 0) return;
+
+          let matchArr = matches.map(([, pkg]) => pkg);
+          let pkg = matchArr[0];
+
+          if (/\.|http(s)?\:/.test(pkg)) return;
+          else if (
+              /^(skypack|unpkg|jsdelivr|esm|esm\.run|esm\.sh)\:/.test(pkg)
+          ) {
+              pkg = pkg.replace(
+                  /^(skypack|unpkg|jsdelivr|esm|esm\.run|esm\.sh)\:/,
+                  ""
+              );
+          }
+
+          return (async () => {
+              let { url } = parseInput(pkg);
+              let response: Response, result: any;
+
+              try {
+                  if (!FetchCache.has(url)) {
+                      response = await fetch(url);
+                      result = await response.json();
+                      FetchCache.set(url, result);
+                  } else {
+                      result = FetchCache.get(url);
+                  }
+              } catch (e) {
+                  console.warn(e);
+                  return;
+              }
+
+              if (result?.results.length <= 0) return;
+
+              const { name, description, version, date, publisher, links } =
+                  result?.results?.[0]?.package ?? {};
+              let author = publisher?.username;
+              let _date = new Date(date).toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+              });
+
+              return {
+                  contents: [].concat({
+                      value: `## [${name}](${
+                          links?.npm
+                      }) v${version}\n${description}\n\n\nPublished on ${_date} ${
+                          author
+                              ? `by [@${author}](https://www.npmjs.com/~${author})`
+                              : ""
+                      }\n\n${
+                          links?.repository
+                              ? `[GitHub](${links?.repository})  |`
+                              : ""
+                      }  [Skypack](https://skypack.dev/view/${name})  |  [Unpkg](https://unpkg.com/browse/${name}/)  | [Openbase](https://openbase.com/js/${name})`,
+                  }),
+              };
+          })();
+      },
+  });
+
+  // Since packaging is done by you, you need
+  // to instruct the editor how you named the
+  // bundles that contain the web workers.
+  (window as any).MonacoEnvironment = {
+    getWorker: function (moduleId, label) {
+      if (label === "typescript" || label === "javascript") {
+        let WorkerArgs = { name: `${label}-worker` };
+        let NewWorker = new WebWorker(TYPESCRIPT_WORKER_URL, WorkerArgs);
+        NewWorker.start();
+        return NewWorker;
+      }
+
+      return (() => {
+        let WorkerArgs = { name: `editor-worker` };
+        let EditorWorker = new WebWorker(EDITOR_WORKER_URL, WorkerArgs);
+        EditorWorker.start();
+        return EditorWorker;
+      })();
+    },
+  };
+
+  // @ts-ignore
+  Editor.defineTheme("dark", GithubDark);
+
+  editorInstance = Editor.create(inputEl, {
+    model: null,
 
     // @ts-ignore
-    Editor.defineTheme("dark", GithubDark);
+    bracketPairColorization: {
+        enabled: true,
+    },
+    parameterHints: {
+        enabled: true,
+    },
+    minimap: {
+      enabled: true,
+    },
+    scrollbar: {
+      // Subtle shadows to the left & top. Defaults to true.
+      useShadows: false,
+      vertical: "auto",
+    },
+    wordWrap: "off",
+    "roundedSelection": true,
+    "scrollBeyondLastLine": false,
+    smoothScrolling: true,
+    theme: "dark",
+    automaticLayout: true,
+    language: "astro",
+    lineNumbers: "on"
+  });
 
-    editorInstance = Editor.create(inputEl, {
-        model: null,
+  let models: Editor.IModel[] = [];
+  for (const [uri, value] of Object.entries(initialModels)) {
+    models.push(Editor.createModel(value, 'astro', Uri.parse(uri)));
+  }
+  if (Object.keys(initialModels).length === 0) {
+    models.push(Editor.createModel(initialValue, 'astro', Uri.parse("inmemory://model/src/pages/Page.astro")))
+  }
+  editorInstance.setModel(models[0]);
 
-        minimap: {
-            enabled: false,
-        },
-        scrollbar: {
-            // Subtle shadows to the left & top. Defaults to true.
-            useShadows: false,
-            vertical: "auto",
-        },
-        wordWrap: "off",
-        "roundedSelection": true,
-        "scrollBeyondLastLine": false,
-        smoothScrolling: true,
-        theme: "dark",
-        automaticLayout: true,
-        language: "astro",
-        lineNumbers: "on"
-    });
-
-    let models: Editor.IModel[] = [];
-    for (const [uri, value] of Object.entries(initialModels)) {
-        models.push(Editor.createModel(value, 'astro', Uri.parse(uri)));
-    }
-    if (Object.keys(initialModels).length === 0) {
-        models.push(Editor.createModel(initialValue, 'astro', Uri.parse("inmemory://model/src/pages/Page.astro")))
-    }
-    editorInstance.setModel(models[0]);
-
-    return { editor: editorInstance, models };
+  return { editor: editorInstance, models };
 };

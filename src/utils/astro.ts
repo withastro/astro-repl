@@ -1,4 +1,4 @@
-import { renderPage } from '../@astro/internal/index.ts';
+import { renderPage } from '../@astro/internal/index';
 
 export async function renderAstroToHTML(content: string): Promise<string | { errors: string[] }> {
     const url = `data:application/javascript;base64,${Buffer.from(content).toString('base64')}`;
