@@ -28,13 +28,7 @@ WorkerEvents.on({
     if (initialized)
       WorkerEvents.emit("ready");
   },
-  warn(details) {
-    let { type, message } = details;
-    console.warn(`${type}\n${message}`);
-  },
 })
-
-
 
 BuildWorker.addEventListener(
   "message",
@@ -138,6 +132,15 @@ const name = "Component"
       });
     }
   }
+
+  WorkerEvents.on("warn", (details) => {
+    let { type, message } = details;
+    console.warn(`${type}\n${message}`);
+    setErr(`${type}\n${message}`);
+    setTimeout(() => {
+      setErr(null);
+    }, 1500)
+  });
 
   WorkerEvents.on("error", (details) => {
     let { type, error } = details;
