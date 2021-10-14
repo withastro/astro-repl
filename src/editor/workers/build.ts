@@ -1,4 +1,4 @@
-import { initialize as EsbuildInitialize, build, BuildResult, OutputFile, BuildIncremental } from "esbuild-wasm/esm/browser";
+import { initialize as EsbuildInitialize, build } from "esbuild-wasm/esm/browser";
 import { EventEmitter } from "@okikio/emitter";
 
 import { getHighlighter, setCDN } from 'shiki';
@@ -34,45 +34,6 @@ import { debounce } from "../../utils";
 
 import type { Highlighter } from 'shiki';
 
-const WorkerEvents = new EventEmitter();
-
-let highlighter: Highlighter;
-let _initialized = false;
-
-(async () => {
-    try {
-        if (!_initialized) {
-            await EsbuildInitialize({
-                worker: false,
-                wasmURL: `/play/esbuild.wasm`
-            });
-
-            await AstroInitialize({
-                wasmURL: '/play/astro.wasm'
-            });
-
-            setCDN('https://unpkg.com/shiki/');
-            highlighter = await getHighlighter({ theme: 'github-dark', langs: ['html', 'ts'] });
-
-            _initialized = true;
-            WorkerEvents.emit("init", {
-                event: "init",
-                details: {},
-            });
-        }
-    } catch (error) {
-        WorkerEvents.emit("init", {
-            event: "error",
-            details: {
-                type: `initialize error`,
-                error,
-            }
-        })
-    }
-})();
-
-vol.fromJSON({}, "/");
-
 interface TimingObject {
     init?: number;
     compile?: number;
@@ -90,27 +51,45 @@ function timestamp(timing: TimingObject, tag: keyof TimingObject) {
 function createTimestamp(): TimingObject {
     return { __current: performance.now() };
 }
+
+let highlighter: Highlighter;
+let _initialized = false;
+
+const initEvent = new EventEmitter();
 const start = (port) => {
-    // When the SharedWorker first loads, tell the page that esbuild has initialized
-    WorkerEvents.on("init", (data) => {
-        port.postMessage(data);
+    const BuildEvents = new EventEmitter();
+    vol.fromJSON({}, `/`);
+    
+    initEvent.on({
+        // When the SharedWorker first loads, tell the page that esbuild has initialized  
+        init() {
+            port.postMessage({
+                event: "init",
+                details: {}
+            });
+        },
+        error(err) {         
+            port.postMessage({
+                event: "error",
+                details: {
+                    type: `Error initializing, you may need to close and reopen all currently open pages pages`,
+                    error: err,
+                }
+            });
+        }
     });
 
     // If another page loads while SharedWorker is still active, tell that page that esbuild is initialized
-    if (_initialized) {
-        port.postMessage({
-            event: "init",
-            details: {}
-        });
-    }
+    if (_initialized) 
+        initEvent.emit("init"); 
 
-    WorkerEvents.on("build", debounce((details) => {
+    BuildEvents.on("build", debounce((details) => {
         if (!_initialized) {
             port.postMessage({
                 event: "warn",
                 details: {
-                    type: `not initialized`,
-                    message: `You need to wait for the "init" event to be fired before trying to build astro files`
+                    type: `Build worker not initialized`,
+                    message: `You need to wait for a little bit before trying to build astro files`
                 }
             });
 
@@ -266,7 +245,7 @@ const start = (port) => {
                 port.postMessage({
                     event: "result",
                     details: {
-                        type: `build complete`,
+                        type: `Build complete`,
                         values: files,
                         js, html, shiki
                     }
@@ -276,7 +255,7 @@ const start = (port) => {
                 port.postMessage({
                     event: "error",
                     details: {
-                        type: `${error?.type ?? "esbuild"} error`,
+                        type: `${error?.type ?? "Build"} error`,
                         error: err
                     }
                 });
@@ -284,10 +263,10 @@ const start = (port) => {
                 return;
             }
         })();
-    }, 100));
+    }, 80));
 
     port.onmessage = ({ data }) => {
-        WorkerEvents.emit(data.event, data.details);
+        BuildEvents.emit(data.event, data.details);
     };
 }
 
@@ -300,3 +279,26 @@ self.onconnect = (e) => {
 if (!("SharedWorkerGlobalScope" in self)) {
     start(self);
 }
+
+(async () => {
+    try {
+        if (!_initialized) {
+            await EsbuildInitialize({
+                worker: false,
+                wasmURL: `/play/esbuild.wasm`
+            });
+
+            await AstroInitialize({
+                wasmURL: '/play/astro.wasm'
+            });
+
+            setCDN('https://unpkg.com/shiki/');
+            highlighter = await getHighlighter({ theme: 'github-dark', langs: ['html', 'ts'] });
+
+            _initialized = true;    
+            initEvent.emit("init");    
+        }
+    } catch (error) { 
+        initEvent.emit("error", error);    
+    }
+})();
