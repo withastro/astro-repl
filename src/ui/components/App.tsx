@@ -55,6 +55,7 @@ const App: FunctionalComponent<Props> = ({ Monaco, /*  esbuildWorker, astroWorke
 
   const { isDesktop } = useWindowSize();
   const [currentTab, setCurrentTab] = useState<TabName>(isDesktop ? TABS.PREVIEW : TABS.CODE);
+  const [loading, setLoading] = useState(true);
 
   const onAddTab = useCallback(() => {
     const basenames = models
@@ -157,6 +158,7 @@ const name = "Component"
 
   WorkerEvents.on("result", (details) => {
     setErr(null);
+    setLoading(false);
     if (details.html) setHtml(details.html?.content);
     if (details.js) {
       setJs(details.js?.content);
@@ -204,7 +206,7 @@ const name = "Component"
         onSetTab={onSetTab}
         ref={editorRef}
       />
-      <Preview currentTab={currentTab} hasError={!!err} html={html} />
+      <Preview currentTab={currentTab} hasError={!!err} html={html} loading={loading} />
       <HTML currentTab={currentTab} hasError={!!err} html={formattedHtml} />
       <JS currentTab={currentTab} hasError={!!err} code={js} />
       <StatusBar error={err} duration={duration} />
