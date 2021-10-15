@@ -1,4 +1,4 @@
-// Based on https://github.com/hardfist/neo-tools/blob/main/packages/bundler/src/plugins/http.ts
+// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/json.ts
 import { CDN_NAMESPACE } from './cdn';
 import { fetchPkg } from './http';
 
@@ -14,9 +14,9 @@ export const JSON_PLUGIN = (): Plugin => {
                 const { content, url } = await fetchPkg(pathUrl);
 
                 return {
-                    contents: `
-                    export const value = ${content};
-                    export default value;`,
+                    contents: `\
+export const value = ${content};
+export default value;`,
                     pluginData: {
                         parentUrl: url,
                     },

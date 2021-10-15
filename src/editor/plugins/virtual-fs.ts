@@ -1,7 +1,8 @@
+// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/virtual-fs.ts
 import path from 'path';
 import { fs } from "memfs";
-import { transform, initialize } from '@astrojs/compiler';
 
+import type { transform as TypeAstroTransform } from '@astrojs/compiler';
 import type { Plugin } from 'esbuild';
 
 export const VIRTUAL_FS_NAMESPACE = 'virtualfs';
@@ -14,16 +15,7 @@ export const resolve = ({ id, importer }: { id: string; importer: string }) => {
     throw new Error(`${resolvedPath} does not exist`);
 };
 
-let _initialized = false
-
-const init = async () => {
-    if (!_initialized) {
-        await initialize({ wasmURL: '/play/astro.wasm' });
-        _initialized = true;
-    }
-}
-
-export const VIRTUAL_FS = (filename: string): Plugin => {
+export const VIRTUAL_FS = ({ filename, transform }: { filename: string, transform: typeof TypeAstroTransform }): Plugin => {
     return {
         name: VIRTUAL_FS_NAMESPACE,
         setup(build) {
@@ -35,6 +27,7 @@ export const VIRTUAL_FS = (filename: string): Plugin => {
                         external: true
                     }
                 }
+
                 return {
                     path: args.path,
                     pluginData: args.pluginData,
@@ -48,7 +41,7 @@ export const VIRTUAL_FS = (filename: string): Plugin => {
                     realPath = args.path.replace(/^\@\//, '/src/components/');
                 }
                 const resolvePath = resolve({
-                    id: args.path,
+                    id: realPath,
                     importer: args.pluginData.importer
                 });
                 
@@ -58,8 +51,8 @@ export const VIRTUAL_FS = (filename: string): Plugin => {
                 const content = (await fs.promises.readFile(realPath)).toString();
 
                 if (path.extname(realPath) === '.astro') {
-                    await init();
                     let tsContent = '';
+
                     try {
                         tsContent = await transform(content, { internalURL: '/play/@astro/internal.min.js', sourcemap: false, sourcefile: '/#' + filename }).then(res => res.code);
                     } catch (e) {

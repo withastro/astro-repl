@@ -1,3 +1,4 @@
+// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/cdn.ts
 import { extname } from 'path';
 import { fetchPkg } from './http';
 

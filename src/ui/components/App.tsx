@@ -12,28 +12,44 @@ import Preview from './Preview';
 import StatusBar from './StatusBar';
 import Share from './Share';
 import useMonaco from '../hooks/useMonaco';
-import useEsbuildWorker from '../hooks/useEsbuildWorker';
-import useAstroWorker from '../hooks/useAstroWorker';
-import useHtmlWorker from '../hooks/useHtmlWorker';
 import { TABS } from '../const';
 import useWindowSize from '../hooks/useWindowSize';
 
+import { BuildWorker, WorkerEvents } from '../../utils/WebWorker';
+import { debounce } from '../../utils';
+
+let initialized = false;
+
+WorkerEvents.on({
+  init() {
+    console.log("Initalized");
+    initialized = true;
+
+    if (initialized)
+      WorkerEvents.emit("ready");
+  },
+})
+
+BuildWorker.addEventListener(
+  "message",
+  ({ data }: MessageEvent<{ event: string; details: any }>) => {
+    let { event, details } = data;
+    WorkerEvents.emit(event, details);
+  }
+);
+
 export interface Props {
   Monaco: typeof import('../../editor/modules/monaco');
-  esbuildWorker: Worker;
-  astroWorker: Worker;
-  htmlWorker: Worker;
   initialModels?: Record<string, string>
 }
 
-const App: FunctionalComponent<Props> = ({ Monaco, esbuildWorker, astroWorker, htmlWorker, initialModels = {} }) => {
+const App: FunctionalComponent<Props> = ({ Monaco, /*  esbuildWorker, astroWorker, htmlWorker, */ initialModels = {} }) => {
   const editorRef = useRef<HTMLElement | null>(null);
   const { editor, models, currentModel, value, setTab, addTab, removeTab } = useMonaco(Monaco, editorRef, initialModels);
-  const { html, error } = useEsbuildWorker(esbuildWorker, editor, models, [value]);
-  const { js, duration } = useAstroWorker(astroWorker, editor, [value]);
-  const { html: formattedHtml } = useHtmlWorker(htmlWorker, html);
+
   const { isDesktop } = useWindowSize();
   const [currentTab, setCurrentTab] = useState<TabName>(isDesktop ? TABS.PREVIEW : TABS.CODE);
+  const [loading, setLoading] = useState(true);
 
   const onAddTab = useCallback(() => {
     const basenames = models
@@ -75,6 +91,110 @@ const name = "Component"
     window.onbeforeunload = () => confirm(`Exit Astro Play? Your work will be lost!`);
   }, []);
 
+  const trackedValue = useRef({ value: '', start: 0 });
+  const [js, setJs] = useState('');
+  const [html, setHtml] = useState('');
+  const [formattedHtml, setformattedHtml] = useState('');
+
+  const [err, setErr] = useState("");
+  const [duration, setDuration] = useState(0);
+
+  const getCurrent = () => {
+    if (!editor.current) return { current: null };
+    const _editor = editor.current;
+
+    const model = _editor.getModel();
+    const value = model.getValue().trim();
+    if (value) {
+      trackedValue.current = { value, start: performance.now() };
+      return {
+        current: { filename: model.uri.path, value }
+      };
+    }
+  }
+
+  let updateModels = () => {
+    if (models.length > 0) {
+      BuildWorker.postMessage({
+        event: "build",
+        details: JSON.stringify(
+          Object.assign(
+            {
+              models: models.map(model => {
+                const filename = model.uri.path;
+                const value = model.getValue();
+                return { filename, value };
+              }),
+            },
+            getCurrent()
+          )
+        )
+      });
+    }
+  }
+
+  WorkerEvents.on("warn", (details) => {
+    let { type, message } = details;
+    console.warn(`${type}\n${message}`);
+    setErr(`${type}\n${message}`);
+    setTimeout(() => {
+      setErr(null);
+    }, 1500)
+  });
+
+  WorkerEvents.on("error", (details) => {
+    let { type, error } = details;
+    console.error(
+      `${type} (please create a new issue in the repo)\n`,
+      error
+    );
+
+    if (typeof error === 'object' && error.message) {
+      const message = error.message.includes("virtualfs:") ?
+        error.message?.split('virtualfs:')[1]?.split(' ').slice(1).join(' ').split('\n')[0]?.replace('error', 'Error') :
+        error.message;
+      setErr(message);
+      return;
+    }
+    setErr(error);
+  });
+
+  WorkerEvents.on("result", (details) => {
+    setErr(null);
+    setLoading(false);
+    if (details.html) setHtml(details.html?.content);
+    if (details.js) {
+      setJs(details.js?.content);
+      if (details.js?.timing) setDuration(details.js.timing?.compile);
+    }
+
+    if (details.shiki) setformattedHtml(details.shiki?.content);
+  });
+
+  WorkerEvents.on("build", debounce(() => {
+    let { current } = getCurrent() ?? {};
+    if (current == null) return;
+    BuildWorker.postMessage({
+      event: "build",
+      details: JSON.stringify({ current })
+    });
+  }, 40));
+
+  WorkerEvents.on("ready", () => {
+    console.log("Ready");
+    updateModels();
+  });
+
+  useEffect(() => {
+    if (!initialized) return;
+    updateModels();
+  }, [models])
+
+  useEffect(() => {
+    if (!initialized) return;
+    WorkerEvents.emit("build");
+  }, [value]);
+
   return (
     <>
       <Menu currentTab={currentTab} setCurrentTab={setCurrentTab}>
@@ -89,10 +209,10 @@ const name = "Component"
         onSetTab={onSetTab}
         ref={editorRef}
       />
-      <Preview currentTab={currentTab} hasError={!!error} html={html} />
-      <HTML currentTab={currentTab} hasError={!!error} html={formattedHtml} />
-      <JS currentTab={currentTab} hasError={!!error} code={js} />
-      <StatusBar error={error} duration={duration} />
+      <Preview currentTab={currentTab} hasError={!!err} html={html} loading={loading} />
+      <HTML currentTab={currentTab} hasError={!!err} html={formattedHtml} />
+      <JS currentTab={currentTab} hasError={!!err} code={js} />
+      <StatusBar error={err} duration={duration} />
     </>
   );
 };

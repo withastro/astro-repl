@@ -1,6 +1,5 @@
+// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/external.ts
 import type { Plugin } from 'esbuild';
-import { CDN_NAMESPACE } from './cdn';
-import { HTTP_NAMESPACE } from './http';
 import { PolyfillMap } from './node-polyfill';
 
 export const EXTERNALS_NAMESPACE = 'external-globals';
@@ -33,7 +32,7 @@ export const EXTERNAL = (): Plugin => {
             build.onLoad({ filter: /.*/, namespace: 'external' }, (args) => {
                 if (args.path === 'node-fetch')
                     return { contents: 'export default fetch' };
-
+                
                 return {
                     contents: `export default {}`,
                     warnings: [

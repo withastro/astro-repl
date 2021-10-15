@@ -1,3 +1,4 @@
+// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/bare.ts
 import { CDN_NAMESPACE } from './cdn';
 import path from 'path';
 
@@ -16,8 +17,9 @@ export const BARE = (): Plugin => {
             external: true,
           };
         }
+
         if (/^(?!\.).*/.test(args.path) && !path.isAbsolute(args.path)) {
-          let argPath = args.path.replace(/^(skypack|esm|esm\.sh|unpkg|jsdelivr|esm\.run)\:/, '');
+          let argPath = args.path.replace(/^(skypack|esm|esm\.sh|unpkg|jsdelivr|esm\.run)\:/, "");
           let host = HOST;
           if (/^skypack\:/.test(args.path)) {
             host = `https://cdn.skypack.dev/`;
@@ -29,12 +31,11 @@ export const BARE = (): Plugin => {
             host = `https://cdn.jsdelivr.net/npm/`;
           }
 
-          // typescript will only work on esm.sh
-          else if (/^typecript/.test(args.path)) {
-            host = `https://cdn.esm.sh/`;
-          }
+          // typescript will only work on unpkg
+          else if (/^typescript/.test(args.path))
+            host = `https://unpkg.com/`;
 
-          let pathUrl = new URL(args.path, host).toString();
+          let pathUrl = new URL(argPath, host).toString();
           pathUrl = pathUrl.replace(/\/$/, '/index'); // Some packages use "../../" which this is supposed to fix
 
           let parentFileExt = path.extname(args.pluginData.parentUrl).replace(/^./, '');

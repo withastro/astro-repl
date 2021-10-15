@@ -1,3 +1,4 @@
+// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/entry.ts
 import { VIRTUAL_FS_NAMESPACE } from "./virtual-fs";
 import type { Plugin } from 'esbuild';
 
