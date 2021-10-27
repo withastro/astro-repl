@@ -34,7 +34,7 @@ BuildWorker.addEventListener(
   "message",
   ({ data }: MessageEvent<{ event: string; details: any }>) => {
     let { event, details } = data;
-    WorkerEvents.emit(event, details);
+    WorkerEvents.emit(event, JSON.parse(details));
   }
 );
 

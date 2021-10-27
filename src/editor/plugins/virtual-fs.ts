@@ -15,16 +15,19 @@ export const resolve = ({ id, importer }: { id: string; importer: string }) => {
     throw new Error(`${resolvedPath} does not exist`);
 };
 
+import { CDN_NAMESPACE } from "./cdn";
 export const VIRTUAL_FS = ({ filename, transform }: { filename: string, transform: typeof TypeAstroTransform }): Plugin => {
     return {
         name: VIRTUAL_FS_NAMESPACE,
         setup(build) {
             build.onResolve({ filter: /.*/, namespace: VIRTUAL_FS_NAMESPACE }, (args) => {
                 if (args.path.startsWith('/play/@astro/')) {
+                    let pathUrl = new URL(args.path, self.location.origin).toString();
                     return {
-                        path: new URL(args.path, self.location.origin).toString(),
-                        namespace: 'external',
-                        external: true
+                        path: pathUrl,
+                        namespace: CDN_NAMESPACE, //'external',
+                        pluginData: { ...args.pluginData, loader: 'ts', pathUrl: pathUrl }
+                        // external: true
                     }
                 }
 

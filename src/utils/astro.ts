@@ -4,8 +4,13 @@ export async function renderAstroToHTML(content: string): Promise<string | { err
     const url = `data:application/javascript;base64,${Buffer.from(content).toString('base64')}`;
     let mod;
     let html;
+
     try {
-        ({ default: mod } = await import(url));
+        // ({ default: mod } = await import(url));
+        // new Promise<void>((resolve) => {})
+        // importScripts(url);
+        // @ts-ignore
+        mod = new Function(`${content} return bundler;`)();
     } catch (e) {
         return {
             errors: [e]

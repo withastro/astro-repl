@@ -41,13 +41,13 @@ export const BARE = (): Plugin => {
           let parentFileExt = path.extname(args.pluginData.parentUrl).replace(/^./, '');
           let fileExt = path.extname(pathUrl).replace(/^./, '');
 
-          if (!fileExt || fileExt === 'js') {
-            return {
-              path: pathUrl,
-              namespace: 'external',
-              external: true,
-            };
-          }
+          // if (!fileExt || fileExt === 'js') {
+          //   return {
+          //     path: pathUrl,
+          //     namespace: 'external',
+          //     external: true,
+          //   };
+          // }
 
           let parentPathIsTS = fileExt == '' && /tsx?|jsx/.test(parentFileExt);
           if (parentPathIsTS) {

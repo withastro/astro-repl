@@ -56,6 +56,30 @@ let highlighter: Highlighter;
 let _initialized = false;
 
 const initEvent = new EventEmitter();
+
+(async () => {
+    try {
+        if (!_initialized) {
+            await EsbuildInitialize({
+                worker: false,
+                wasmURL: `/play/esbuild.wasm`
+            });
+
+            await AstroInitialize({
+                wasmURL: '/play/astro.wasm'
+            });
+
+            setCDN('https://unpkg.com/shiki/');
+            highlighter = await getHighlighter({ theme: 'github-dark', langs: ['html', 'ts'] });
+
+            _initialized = true;    
+            initEvent.emit("init");    
+        }
+    } catch (error) { 
+        initEvent.emit("error", error);    
+    }
+})();
+
 const start = (port) => {
     const BuildEvents = new EventEmitter();
     vol.fromJSON({}, `/`);
@@ -65,16 +89,16 @@ const start = (port) => {
         init() {
             port.postMessage({
                 event: "init",
-                details: {}
+                details: JSON.stringify({})
             });
         },
         error(err) {         
             port.postMessage({
                 event: "error",
-                details: {
+                details: JSON.stringify({
                     type: `Error initializing, you may need to close and reopen all currently open pages pages`,
                     error: err,
-                }
+                })
             });
         }
     });
@@ -83,14 +107,14 @@ const start = (port) => {
     if (_initialized) 
         initEvent.emit("init"); 
 
-    BuildEvents.on("build", debounce((details) => {
+    BuildEvents.on("build", (details) => {//debounce((details) => {
         if (!_initialized) {
             port.postMessage({
                 event: "warn",
-                details: {
+                details: JSON.stringify({
                     type: `Build worker not initialized`,
                     message: `You need to wait for a little bit before trying to build astro files`
-                }
+                })
             });
 
             return;
@@ -128,7 +152,8 @@ const start = (port) => {
                         write: false,
                         outfile,
                         platform: "browser",
-                        format: "esm",
+                        // format: "esm",
+                        format: "iife",
                         loader: {
                             '.png': 'file',
                             '.jpeg': 'file',
@@ -155,7 +180,7 @@ const start = (port) => {
                         ],
                         globalName: 'bundler',
                     });
-
+                    
                     result?.outputFiles?.forEach((x) => {
                         if (!fs.existsSync(path.dirname(x.path))) {
                             fs.mkdirSync(path.dirname(x.path));
@@ -169,7 +194,7 @@ const start = (port) => {
 
                     content = await fs.promises.readFile(outfile, "utf-8") as string;
                     content = content?.trim?.(); // Remove unesscary space
-
+                    console.log(content)
                     const output = await renderAstroToHTML(content);
                     if (typeof output === 'string')
                         content = output;
@@ -244,26 +269,30 @@ const start = (port) => {
 
                 port.postMessage({
                     event: "result",
-                    details: {
+                    details: JSON.stringify({
                         type: `Build complete`,
                         values: files,
                         js, html, shiki
-                    }
+                    })
                 });
             } catch (error) {
-                let err = (error?.error ?? error);
+                // @ts-ignore
+                let err = "error" in error ? error.error : error;
                 port.postMessage({
                     event: "error",
-                    details: {
+                    details: JSON.stringify({
                         type: `${error?.type ?? "Build"} error`,
                         error: err
-                    }
+                    })
                 });
+
+                console.warn(err);
 
                 return;
             }
         })();
-    }, 80));
+    }//, 80)
+    );
 
     port.onmessage = ({ data }) => {
         BuildEvents.emit(data.event, data.details);
@@ -279,26 +308,3 @@ self.onconnect = (e) => {
 if (!("SharedWorkerGlobalScope" in self)) {
     start(self);
 }
-
-(async () => {
-    try {
-        if (!_initialized) {
-            await EsbuildInitialize({
-                worker: false,
-                wasmURL: `/play/esbuild.wasm`
-            });
-
-            await AstroInitialize({
-                wasmURL: '/play/astro.wasm'
-            });
-
-            setCDN('https://unpkg.com/shiki/');
-            highlighter = await getHighlighter({ theme: 'github-dark', langs: ['html', 'ts'] });
-
-            _initialized = true;    
-            initEvent.emit("init");    
-        }
-    } catch (error) { 
-        initEvent.emit("error", error);    
-    }
-})();
