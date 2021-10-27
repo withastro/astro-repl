@@ -359,11 +359,11 @@ function createFetchContentFn(url: URL) {
         if (!mod.frontmatter) {
           return;
         }
-        const urlSpec = new URL(spec, url).pathname;
+        const urlSpec = new URL(spec, url.origin).pathname;
         return {
           ...mod.frontmatter,
           content: mod.metadata,
-          file: new URL(spec, url),
+          file: new URL(spec, url.origin),
           url: urlSpec.includes('/pages/') ? urlSpec.replace(/^.*\/pages\//, '/').replace(/(\/index)?\.md$/, '') : undefined,
         };
       })
@@ -373,7 +373,14 @@ function createFetchContentFn(url: URL) {
 }
 
 export function createAstro(fileURLStr: string, site: string): TopLevelAstro {
-  const url = new URL(fileURLStr);
+
+  let url;
+  try {
+   url = new URL(((fileURLStr as unknown) instanceof URL ? (fileURLStr as unknown as URL).href : fileURLStr) ?? globalThis.location.href);
+   console.log(site)
+  } catch (e) {
+    console.log(e)
+  }
   const fetchContent = createFetchContentFn(url) as unknown as TopLevelAstro['fetchContent'];
   return {
     // TODO I think this is no longer needed.

@@ -26,7 +26,7 @@ export const VIRTUAL_FS = ({ filename, transform }: { filename: string, transfor
                     return {
                         path: pathUrl,
                         namespace: CDN_NAMESPACE, //'external',
-                        pluginData: { ...args.pluginData, loader: 'ts', pathUrl: pathUrl }
+                        pluginData: { ...args.pluginData, loader: 'ts', pathUrl: pathUrl },
                         // external: true
                     }
                 }

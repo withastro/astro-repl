@@ -194,7 +194,7 @@ const start = (port) => {
 
                     content = await fs.promises.readFile(outfile, "utf-8") as string;
                     content = content?.trim?.(); // Remove unesscary space
-                    console.log(content)
+                    // console.log(content)
                     const output = await renderAstroToHTML(content);
                     if (typeof output === 'string')
                         content = output;

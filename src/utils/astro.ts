@@ -5,11 +5,15 @@ export async function renderAstroToHTML(content: string): Promise<string | { err
     let mod;
     let html;
 
+    var bundler = '';
     try {
         // ({ default: mod } = await import(url));
         // new Promise<void>((resolve) => {})
         // importScripts(url);
+
+        // mod = bundler;
         // @ts-ignore
+        // new Worker(url, { type: ""})
         mod = new Function(`${content} return bundler;`)();
     } catch (e) {
         return {
@@ -31,7 +35,7 @@ export async function renderAstroToHTML(content: string): Promise<string | { err
             // const canonicalURL = getCanonicalURL(pathname, astroConfig.buildOptions.site || origin)
             return { isPage: true, site: url, request: { url, canonicalURL: url }, props };
         },
-    }, await mod, {}, {});
+    }, mod, {}, {}); // await 
     } catch (e) {
         return {
             errors: [e]

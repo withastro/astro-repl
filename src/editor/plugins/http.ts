@@ -1,4 +1,4 @@
-// Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/http.ts
+// // Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/http.ts
 // import type { Plugin } from 'esbuild';
 
 // export async function fetchPkg(url: string) {
