@@ -18,7 +18,10 @@ import useWindowSize from '../hooks/useWindowSize';
 import { BuildWorker, WorkerEvents } from '../../utils/WebWorker';
 import { debounce } from '../../utils';
 
+import { compress, decompress } from '@amoutonbrady/lz-string';
+
 let initialized = false;
+let ready = false;
 
 WorkerEvents.on({
   init() {
@@ -32,9 +35,9 @@ WorkerEvents.on({
 
 BuildWorker.addEventListener(
   "message",
-  ({ data }: MessageEvent<{ event: string; details: any }>) => {
-    let { event, details } = data;
-    WorkerEvents.emit(event, JSON.parse(details));
+  ({ data }: MessageEvent<string>) => {
+    let { event, details } = JSON.parse(decompress(data));
+    WorkerEvents.emit(event, details);
   }
 );
 
@@ -115,10 +118,9 @@ const name = "Component"
 
   let updateModels = () => {
     if (models.length > 0) {
-      BuildWorker.postMessage({
+      BuildWorker.postMessage(compress(JSON.stringify({
         event: "build",
-        details: JSON.stringify(
-          Object.assign(
+        details: Object.assign(
             {
               models: models.map(model => {
                 const filename = model.uri.path;
@@ -128,8 +130,7 @@ const name = "Component"
             },
             getCurrent()
           )
-        )
-      });
+      })));
     }
   }
 
@@ -153,10 +154,10 @@ const name = "Component"
       const message = error.message.includes("virtualfs:") ?
         error.message?.split('virtualfs:')[1]?.split(' ').slice(1).join(' ').split('\n')[0]?.replace('error', 'Error') :
         error.message;
-      setErr(message);
+      setErr(JSON.stringify(message));
       return;
     }
-    setErr(error);
+    setErr(JSON.stringify(error));
   });
 
   WorkerEvents.on("result", (details) => {
@@ -174,19 +175,20 @@ const name = "Component"
   WorkerEvents.on("build", debounce(() => {
     let { current } = getCurrent() ?? {};
     if (current == null) return;
-    BuildWorker.postMessage({
+    BuildWorker.postMessage(compress(JSON.stringify({
       event: "build",
-      details: JSON.stringify({ current })
-    });
+      details: { current }
+    })));
   }, 40));
 
   WorkerEvents.on("ready", () => {
     console.log("Ready");
     updateModels();
+    ready = true;
   });
 
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || !ready) return;
     updateModels();
   }, [models])
 

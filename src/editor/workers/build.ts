@@ -32,6 +32,11 @@ import { WASM } from "../plugins/wasm";
 import { renderAstroToHTML } from "../../utils/astro";
 import { debounce } from "../../utils";
 
+import { compress, decompress } from '@amoutonbrady/lz-string';
+
+import { rollup } from "rollup";
+import virtual from "@rollup/plugin-virtual";
+
 import type { Highlighter } from 'shiki';
 
 interface TimingObject {
@@ -87,19 +92,19 @@ const start = (port) => {
     initEvent.on({
         // When the SharedWorker first loads, tell the page that esbuild has initialized  
         init() {
-            port.postMessage({
+            port.postMessage(compress(JSON.stringify({
                 event: "init",
-                details: JSON.stringify({})
-            });
+                details: {}
+            })));
         },
         error(err) {         
-            port.postMessage({
+            port.postMessage(compress(JSON.stringify({
                 event: "error",
-                details: JSON.stringify({
+                details: {
                     type: `Error initializing, you may need to close and reopen all currently open pages pages`,
                     error: err,
-                })
-            });
+                }
+            })));
         }
     });
 
@@ -107,20 +112,20 @@ const start = (port) => {
     if (_initialized) 
         initEvent.emit("init"); 
 
-    BuildEvents.on("build", (details) => {//debounce((details) => {
+    BuildEvents.on("build", debounce((details) => {
         if (!_initialized) {
-            port.postMessage({
+            port.postMessage(compress(JSON.stringify({
                 event: "warn",
-                details: JSON.stringify({
+                details: {
                     type: `Build worker not initialized`,
                     message: `You need to wait for a little bit before trying to build astro files`
-                })
-            });
+                }
+            })));
 
             return;
         }
 
-        let { models = [], current } = JSON.parse(details) ?? {};
+        let { models = [], current } = details ?? {};
         let files = [];
         let html, js, shiki;
 
@@ -140,11 +145,11 @@ const start = (port) => {
 
                     let content: string = "";
                     let result = await build({
+                        // sourcemap: 'inline',
                         entryPoints: ['<stdin>'],
                         bundle: true,
                         minify: true,
                         color: true,
-                        sourcemap: 'inline',
                         treeShaking: true,
                         incremental: true,
                         target: ["esnext"],
@@ -194,7 +199,36 @@ const start = (port) => {
 
                     content = await fs.promises.readFile(outfile, "utf-8") as string;
                     content = content?.trim?.(); // Remove unesscary space
-                    // console.log(content)
+
+                    // try {
+                    //     const bundle = await rollup({
+                    //         input: "entry",
+                    //         treeshake: true,
+                    //         plugins: [
+                    //             virtual({
+                    //                 entry: content
+                    //             })
+                    //         ]
+                    //     });
+        
+                    //     const { output } = await bundle.generate({
+                    //         format: "umd",
+                    //         sourcemap: false,
+                    //         minifyInternalExports: false,
+                    //         name: "bundler"
+                    //     });
+        
+                    //     content = output[0].code?.trim?.() ?? content; // Remove unesscary space
+        
+                    //     // // Closes the bundle
+                    //     // await bundle.close();
+                    // } catch (error) {
+                    //     throw {
+                    //         type: `rollup treeshaking error`,
+                    //         error
+                    //     };
+                    // }
+
                     const output = await renderAstroToHTML(content);
                     if (typeof output === 'string')
                         content = output;
@@ -267,35 +301,34 @@ const start = (port) => {
                     }
                 }
 
-                port.postMessage({
+                port.postMessage(compress(JSON.stringify({
                     event: "result",
-                    details: JSON.stringify({
+                    details: {
                         type: `Build complete`,
                         values: files,
                         js, html, shiki
-                    })
-                });
+                    }
+                })));
             } catch (error) {
                 // @ts-ignore
-                let err = "error" in error ? error.error : error;
-                port.postMessage({
+                let err = (error?.error ?? error);
+                port.postMessage(compress(JSON.stringify({
                     event: "error",
-                    details: JSON.stringify({
+                    details: {
                         type: `${error?.type ?? "Build"} error`,
-                        error: err
-                    })
-                });
+                        error: "error" in error ? err.error?.message : err
+                    }
+                })));
 
                 console.warn(err);
-
                 return;
             }
         })();
-    }//, 80)
-    );
+    }, 80));
 
     port.onmessage = ({ data }) => {
-        BuildEvents.emit(data.event, data.details);
+        let { event, details } = JSON.parse(decompress(data));
+        BuildEvents.emit(event, details);
     };
 }
 

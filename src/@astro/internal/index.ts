@@ -288,6 +288,7 @@ export async function renderSlot(result: any, slotted: string, fallback?: any) {
 export async function renderComponent(result: SSRResult, displayName: string, Component: unknown, _props: Record<string | number, any>, slots: any = {}) {
   Component = await Component;
   const children = await renderSlot(result, slots?.default);
+  console.log(slots)
   const { renderers } = result._metadata;
 
   if (Component && (Component as any).isAstroComponentFactory) {
@@ -377,7 +378,6 @@ export function createAstro(fileURLStr: string, site: string): TopLevelAstro {
   let url;
   try {
    url = new URL(((fileURLStr as unknown) instanceof URL ? (fileURLStr as unknown as URL).href : fileURLStr) ?? globalThis.location.href);
-   console.log(site)
   } catch (e) {
     console.log(e)
   }
