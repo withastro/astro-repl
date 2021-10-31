@@ -43,7 +43,7 @@ export interface Props {
   initialModels?: Record<string, string>
 }
 
-const App: FunctionalComponent<Props> = ({ Monaco, /*  esbuildWorker, astroWorker, htmlWorker, */ initialModels = {} }) => {
+const App: FunctionalComponent<Props> = ({ Monaco, initialModels = {} }) => {
   const editorRef = useRef<HTMLElement | null>(null);
   const { editor, models, currentModel, value, setTab, addTab, removeTab } = useMonaco(Monaco, editorRef, initialModels);
 
