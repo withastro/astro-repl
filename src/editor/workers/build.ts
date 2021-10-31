@@ -107,7 +107,7 @@ const start = (port) => {
     if (_initialized) 
         initEvent.emit("init"); 
 
-    BuildEvents.on("build", (details) => {//debounce((details) => {
+    BuildEvents.on("build", debounce((details) => {
         if (!_initialized) {
             port.postMessage({
                 event: "warn",
@@ -120,11 +120,12 @@ const start = (port) => {
             return;
         }
 
-        let { models = [], current } = JSON.parse(details) ?? {};
+        let { models = [], current } = details ?? {};
         let files = [];
         let html, js, shiki;
 
         if (models.length <= 0 && current) models = [current];
+
         (async () => {
             try {
                 /* Esbuild */
@@ -140,11 +141,11 @@ const start = (port) => {
 
                     let content: string = "";
                     let result = await build({
+                        // sourcemap: 'inline',
                         entryPoints: ['<stdin>'],
                         bundle: true,
                         minify: true,
                         color: true,
-                        sourcemap: 'inline',
                         treeShaking: true,
                         incremental: true,
                         target: ["esnext"],
@@ -152,8 +153,7 @@ const start = (port) => {
                         write: false,
                         outfile,
                         platform: "browser",
-                        // format: "esm",
-                        format: "iife",
+                        format: "esm",
                         loader: {
                             '.png': 'file',
                             '.jpeg': 'file',
@@ -180,7 +180,7 @@ const start = (port) => {
                         ],
                         globalName: 'bundler',
                     });
-                    
+
                     result?.outputFiles?.forEach((x) => {
                         if (!fs.existsSync(path.dirname(x.path))) {
                             fs.mkdirSync(path.dirname(x.path));
@@ -194,7 +194,7 @@ const start = (port) => {
 
                     content = await fs.promises.readFile(outfile, "utf-8") as string;
                     content = content?.trim?.(); // Remove unesscary space
-                    // console.log(content)
+
                     const output = await renderAstroToHTML(content);
                     if (typeof output === 'string')
                         content = output;
@@ -276,8 +276,7 @@ const start = (port) => {
                     })
                 });
             } catch (error) {
-                // @ts-ignore
-                let err = "error" in error ? error.error : error;
+                let err = (error?.error ?? error);
                 port.postMessage({
                     event: "error",
                     details: JSON.stringify({
@@ -286,16 +285,13 @@ const start = (port) => {
                     })
                 });
 
-                console.warn(err);
-
                 return;
             }
         })();
-    }//, 80)
-    );
+    }, 80));
 
     port.onmessage = ({ data }) => {
-        BuildEvents.emit(data.event, data.details);
+        BuildEvents.emit(data.event, JSON.parse(data.details));
     };
 }
 

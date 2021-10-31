@@ -3,13 +3,13 @@ import { EventEmitter } from '@okikio/emitter';
 import { SharedWorkerPolyfill as WebWorker } from '@okikio/sharedworker';
 
 import BUILD_WORKER_URL from 'worker:../editor/workers/build.ts';
-export const WorkerEvents = new EventEmitter(); // WebWorker
-export const BuildWorker = new Worker(BUILD_WORKER_URL, {
+export const WorkerEvents = new EventEmitter();
+export const BuildWorker = new WebWorker(BUILD_WORKER_URL, {
     name: 'build-worker',
-    // type: "module"
+    type: 'module'
 });
 
-// BuildWorker.start();
+BuildWorker.start();
   
 export { WebWorker };
 export default WebWorker;

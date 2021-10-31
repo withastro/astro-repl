@@ -1,6 +1,6 @@
 import esbuild from 'esbuild';
 import path from 'path';
-import globby from 'globby';
+import fastGlob from 'fast-glob';
 import { WEB_WORKER } from './plugins/worker';
 import { rm, mkdir, copyFile } from 'fs/promises';
 
@@ -43,7 +43,7 @@ async function build() {
         await mkdir('dist/play', { recursive: true });
     } catch (e) {}
     try {
-        const pub = await globby('public/**/*');
+        const pub = await fastGlob('public/**/*');
         const wasm = ['node_modules/esbuild-wasm/esbuild.wasm', 'node_modules/@astrojs/compiler/astro.wasm'];
         await Promise.all(wasm.map(src => {
             const dest = `dist/play/${path.basename(src)}`;
@@ -51,7 +51,7 @@ async function build() {
         }));
         await Promise.all(pub.map(src => copyFile(src, src.replace(/^public/, path.join('dist', 'play')))))
     } catch (e) {}
-    const entryPoints = await globby([
+    const entryPoints = await fastGlob([
         `src/index.ts`,
         `src/editor/*.ts`,
         `src/@astro/*.ts`,
