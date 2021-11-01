@@ -18,7 +18,6 @@ import useWindowSize from '../hooks/useWindowSize';
 import { BuildWorker, WorkerEvents } from '../../utils/WebWorker';
 import { debounce } from '../../utils';
 
-import { compress, decompress } from '@amoutonbrady/lz-string';
 import { encode, decode } from "../../utils/encode-decode";
 
 let initialized = false;

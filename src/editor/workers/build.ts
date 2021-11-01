@@ -5,7 +5,7 @@ import { getHighlighter, setCDN } from 'shiki';
 import { transform, initialize as AstroInitialize } from '@astrojs/compiler';
 
 import path from "path";
-import { Volume } from "memfs";
+import { vol, fs } from "memfs";
 
 // @ts-ignore
 import prettier from 'prettier/esm/standalone.mjs';
@@ -32,7 +32,6 @@ import { WASM } from "../plugins/wasm";
 import { renderAstroToHTML } from "../../utils/astro";
 import { debounce, throttle } from "../../utils";
 
-import { compress, decompress } from '@amoutonbrady/lz-string';
 import { encode, decode } from "../../utils/encode-decode";
 
 import type { Highlighter } from 'shiki';
@@ -85,7 +84,7 @@ const initEvent = new EventEmitter();
 
 const start = (port) => {
     const BuildEvents = new EventEmitter();
-    let fs = Volume.fromJSON({}, `/`);
+    vol.fromJSON({}, `/`);
 
     const postMessage = (obj: any) => {
         let messageStr = JSON.stringify(obj); // compress()
@@ -132,10 +131,6 @@ const start = (port) => {
         let { models = [], current } = details ?? {};
         let files = [];
         let html, js, shiki;
-
-        if (models.length > 1) {
-            fs = Volume.fromJSON({}, `/`);
-        }
 
         if (models.length <= 0 && current) models = [current];
         (async () => {

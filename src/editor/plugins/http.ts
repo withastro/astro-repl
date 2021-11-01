@@ -1,61 +1,3 @@
-// // Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/http.ts
-// import type { Plugin } from 'esbuild';
-
-// export async function fetchPkg(url: string) {
-//     const res = await fetch(url);
-//     return {
-//         url: res.url,
-//         content: await res.text(),
-//     };
-// }
-
-// export const HTTP_NAMESPACE = 'http-url';
-// export const HTTP = (): Plugin => {
-//     return {
-//         name: 'http',
-//         setup(build) {
-//             // Intercept import paths starting with "http:" and "https:" so
-//             // esbuild doesn't attempt to map them to a file system location.
-//             // Tag them with the "http-url" namespace to associate them with
-//             // this plugin.
-//             build.onResolve({ filter: /^https?:\/\// }, args => {
-//                 return {
-//                     path: new URL(args.path, args.resolveDir.replace(/^\//, '')).toString(),
-//                     namespace: 'external',
-//                     external: true
-//                 };
-//             });
-
-//             // We also want to intercept all import paths inside downloaded
-//             // files and resolve them against the original URL. All of these
-//             // files will be in the "http-url" namespace. Make sure to keep
-//             // the newly resolved URL in the "http-url" namespace so imports
-//             // inside it will also be resolved as URLs recursively.
-//             build.onResolve({ filter: /.*/, namespace: HTTP_NAMESPACE }, args => {
-//                 return {
-//                     path: new URL(args.path, args.importer).toString(),
-//                     namespace: 'external',
-//                     external: true
-//                 };
-//             });
-
-//             // When a URL is loaded, we want to actually download the content
-//             // from the internet. This has just enough logic to be able to
-//             // handle the example import from https://cdn.skypack.dev/ but in reality this
-//             // would probably need to be more complex.
-//             build.onLoad({ filter: /.*/, namespace: HTTP_NAMESPACE }, async (args) => {
-//                 const { content, url } = await fetchPkg(args.path);
-//                 return {
-//                     contents: content,
-//                     loader: 'ts',
-//                     resolveDir: `/${url}`, // a hack fix resolveDir problem
-//                 };
-//             });
-//         },
-//     };
-// };
-
-
 // Based on https://github.com/hardfist/neo-tools/blob/main/packages/bundler/src/plugins/http.ts
 import type { Plugin } from 'esbuild';
 
@@ -64,7 +6,8 @@ export async function fetchPkg(url: string) {
     let result;
     if (CACHE.has(url) && CACHE.size < 100) 
         result = CACHE.get(url);
-    else {
+    else {        
+        if (CACHE.size >= 100) CACHE.clear();
         let res = await fetch(url);
         result = {
             url: res.url,
