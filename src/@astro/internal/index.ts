@@ -80,25 +80,44 @@ export async function renderToString(result: any, componentFactory: AstroCompone
   return template
 }
 
-export async function renderPage(result: any, Component: AstroComponentFactory, props: any, children: any) {
+// Filter out duplicate elements in our set
+const uniqueElements = (item: any, index: number, all: any[]) => {
+  const props = JSON.stringify(item.props);
+  const children = item.children;
+  return index === all.findIndex((i) => JSON.stringify(i.props) === props && i.children == children);
+};
+
+export async function renderPage(result: SSRResult, Component: AstroComponentFactory, props: any, children: any) {
   const template = await renderToString(result, Component, props, children);
-  const styles = Array.from(result.styles).map(style => renderElement('style', style as any));
-  const scripts = Array.from(result.scripts).map(script => renderElement('script', script as any));
-  return template.replace("</head>", styles.join('\n') + scripts.join('\n') + "</head>");
+  const styles = Array.from(result.styles)
+    .filter(uniqueElements)
+    .map((style) => renderElement('style', style));
+  const scripts = Array.from(result.scripts)
+    .filter(uniqueElements)
+    .map((script) => renderElement('script', script));
+  return template.replace('</head>', styles.join('\n') + scripts.join('\n') + '</head>');
 }
 
-function renderElement(name: string, { props: _props, children = ''}: { props: Record<any, any>, children?: string }) {
-  const { hoist: _, "data-astro-id": astroId, "define:vars": defineVars, ...props } = _props;
+function renderElement(name: string, { props: _props, children = '' }: SSRElement) {
+  // Do not print `hoist`, `lang`, `global`
+  const { lang: _, 'data-astro-id': astroId, 'define:vars': defineVars, ...props } = _props;
   if (defineVars) {
     if (name === 'style') {
-      children = defineStyleVars(astroId, defineVars) + '\n' + children;
+      if (props.global) {
+        children = defineStyleVars(`:root`, defineVars) + '\n' + children;
+      } else {
+        children = defineStyleVars(`.astro-${astroId}`, defineVars) + '\n' + children;
+      }
+      delete props.global;
     }
     if (name === 'script') {
+      delete props.hoist;
       children = defineScriptVars(defineVars) + '\n' + children;
     }
   }
-  return `<${name}${spreadAttributes(props)}>${children}</${name}>`
+  return `<${name}${spreadAttributes(props)}>${children}</${name}>`;
 }
+
 
 const { generate, GENERATOR } = astring;
 
