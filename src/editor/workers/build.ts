@@ -32,6 +32,8 @@ import { WASM } from "../plugins/wasm";
 import { renderAstroToHTML } from "../../utils/astro";
 import { debounce } from "../../utils";
 
+import { encode, decode } from "../../utils/encode-decode";
+
 import type { Highlighter } from 'shiki';
 
 interface TimingObject {
@@ -82,39 +84,45 @@ const initEvent = new EventEmitter();
 
 const start = (port) => {
     const BuildEvents = new EventEmitter();
-    vol.fromJSON({}, `/`);
+    vol.fromJSON({}, `/`);  
+
+    const postMessage = (obj: any) => {
+        let messageStr = JSON.stringify(obj);
+        let encodedMessage = encode(messageStr);
+        port.postMessage(encodedMessage , [encodedMessage.buffer]); 
+    };         
     
     initEvent.on({
         // When the SharedWorker first loads, tell the page that esbuild has initialized  
         init() {
-            port.postMessage({
+            postMessage({
                 event: "init",
-                details: JSON.stringify({})
+                details: {}
             });
         },
         error(err) {         
-            port.postMessage({
+            postMessage({
                 event: "error",
-                details: JSON.stringify({
+                details: {
                     type: `Error initializing, you may need to close and reopen all currently open pages pages`,
                     error: err,
-                })
+                }
             });
         }
     });
 
     // If another page loads while SharedWorker is still active, tell that page that esbuild is initialized
     if (_initialized) 
-        initEvent.emit("init"); 
-
+        initEvent.emit("init");
+        
     BuildEvents.on("build", debounce((details) => {
         if (!_initialized) {
-            port.postMessage({
+            postMessage({
                 event: "warn",
-                details: JSON.stringify({
+                details: {
                     type: `Build worker not initialized`,
                     message: `You need to wait for a little bit before trying to build astro files`
-                })
+                }
             });
 
             return;
@@ -127,15 +135,21 @@ const start = (port) => {
         if (models.length <= 0 && current) models = [current];
 
         (async () => {
-            try {
+            try { 
+                // Preload all components and files to avoid esbuild building while still missing files
+                for (let data of models) {
+                    let filename: string = `${data.filename}`;
+                    let input: string = `${data.value}`.trim(); // Ensure input is a string
+
+                    fs.mkdirpSync(path.dirname(filename));
+                    fs.writeFileSync(filename, input);
+                }
+
                 /* Esbuild */
                 for (let data of models) {
                     let filename: string = `${data.filename}`;
                     let outfile = `/dist/${filename.slice('/src/pages/'.length)}`;
                     let input: string = `${data.value}`.trim(); // Ensure input is a string
-
-                    fs.mkdirpSync(path.dirname(filename));
-                    fs.writeFileSync(filename, input);
 
                     if (input.length <= 0) continue;
 
@@ -267,31 +281,32 @@ const start = (port) => {
                     }
                 }
 
-                port.postMessage({
+                postMessage({
                     event: "result",
-                    details: JSON.stringify({
+                    details: {
                         type: `Build complete`,
                         values: files,
                         js, html, shiki
-                    })
+                    }
                 });
             } catch (error) {
                 let err = (error?.error ?? error);
-                port.postMessage({
+                postMessage({
                     event: "error",
-                    details: JSON.stringify({
+                    details: {
                         type: `${error?.type ?? "Build"} error`,
                         error: err
-                    })
+                    }
                 });
 
                 return;
             }
         })();
-    }, 80));
+    }, 30));
 
-    port.onmessage = ({ data }) => {
-        BuildEvents.emit(data.event, JSON.parse(data.details));
+    port.onmessage = ({ data }) => {    
+        let { event, details } = JSON.parse(decode(data)); 
+        BuildEvents.emit(event, details);
     };
 }
 

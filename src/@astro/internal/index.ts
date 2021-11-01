@@ -284,7 +284,10 @@ export async function renderSlot(result: any, slotted: string, fallback?: any) {
 export async function renderComponent(result: SSRResult, displayName: string, Component: unknown, _props: Record<string | number, any>, slots: any = {}) {
   Component = await Component;
   const children = await renderSlot(result, slots?.default);
-  const { renderers } = result._metadata;
+  
+  // No renderers for the repl
+  // const { renderers } = result._metadata;
+  const renderers = [];
 
   if (Component && (Component as any).isAstroComponentFactory) {
     const output = await renderToString(result, Component as any, _props, slots);
