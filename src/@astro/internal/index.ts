@@ -1,7 +1,3 @@
-// import type { AstroComponentMetadata, Renderer } from '../../@types/astro-core';
-// import type { SSRResult } from '../../@types/astro-runtime';
-// import type { TopLevelAstro } from '../../@types/astro-runtime';
-
 import { valueToEstree } from 'estree-util-value-to-estree';
 import * as astring from 'astring';
 import shorthash from 'shorthash';
@@ -288,7 +284,7 @@ export async function renderSlot(result: any, slotted: string, fallback?: any) {
 export async function renderComponent(result: SSRResult, displayName: string, Component: unknown, _props: Record<string | number, any>, slots: any = {}) {
   Component = await Component;
   const children = await renderSlot(result, slots?.default);
-
+  
   // No renderers for the repl
   // const { renderers } = result._metadata;
   const renderers = [];
@@ -376,13 +372,13 @@ function createFetchContentFn(url: URL) {
 }
 
 export function createAstro(fileURLStr: string, site: string): TopLevelAstro {
-
   let url;
   try {
    url = new URL(((fileURLStr as unknown) instanceof URL ? (fileURLStr as unknown as URL).href : fileURLStr) ?? globalThis.location.href);
   } catch (e) {
     console.log("createAstro Error", e)
   }
+  
   const fetchContent = createFetchContentFn(url) as unknown as TopLevelAstro['fetchContent'];
   return {
     // TODO I think this is no longer needed.
@@ -407,46 +403,3 @@ export function addAttribute(value: any, key: string) {
 
   return ` ${key}="${value}"`;
 }
-
-// export async function renderToString(result: any, componentFactory: AstroComponentFactory, props: any, children: any) {
-//   const Component = await componentFactory(result, props, children);
-//   let template = await renderAstroComponent(Component);
-//   return template;
-// }
-
-// export async function renderPage(result: any, Component: AstroComponentFactory, props: any, children: any) {
-//   const template = await renderToString(result, Component, props, children);
-//   const styles = Array.from(result.styles).map((style: any) => renderElement('style', style));
-//   const scripts = Array.from(result.scripts);
-//   return template.replace('</head>', styles.join('\n') + scripts.join('\n') + '</head>');
-// }
-
-// export async function renderAstroComponent(component: InstanceType<typeof AstroComponent>) {
-//   let template = '';
-
-//   for await (const value of component) {
-//     if (value || value === 0) {
-//       template += value;
-//     }
-//   }
-
-//   return template;
-// }
-
-// function renderElement(name: string, { props: _props, children = '' }: { props: Record<any, any>; children?: string }) {
-//   // Do not print `hoist`, `lang`, `global`
-//   const { hoist: _0, lang: _1, global = false, 'data-astro-id': astroId, 'define:vars': defineVars, ...props } = _props;
-//   if (defineVars) {
-//     if (name === 'style') {
-//       if (global) {
-//         children = defineStyleVars(`:root`, defineVars) + '\n' + children;
-//       } else {
-//         children = defineStyleVars(`.astro-${astroId}`, defineVars) + '\n' + children;
-//       }
-//     }
-//     if (name === 'script') {
-//       children = defineScriptVars({ ...defineVars }) + '\n' + children;
-//     }
-//   }
-//   return `<${name}${spreadAttributes(props)}>${children}</${name}>`;
-// }

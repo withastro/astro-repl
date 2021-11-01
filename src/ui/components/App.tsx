@@ -34,15 +34,15 @@ WorkerEvents.on({
 })
 
 const postMessage = (obj: any) => {
-    let messageStr = JSON.stringify(obj); // compress()
-    let encodedMessage = encode(messageStr);
-    BuildWorker.postMessage(encodedMessage , [encodedMessage.buffer]); //
+  let messageStr = JSON.stringify(obj);
+  let encodedMessage = encode(messageStr);
+  BuildWorker.postMessage(encodedMessage , [encodedMessage.buffer]); 
 }
 
 BuildWorker.addEventListener(
-  "message",
+"message",
   ({ data }: MessageEvent<Uint8Array>) => {
-    let { event, details } = JSON.parse(decode(data)); // decompress()
+    let { event, details } = JSON.parse(decode(data));
     WorkerEvents.emit(event, details);
   }
 );
@@ -52,7 +52,7 @@ export interface Props {
   initialModels?: Record<string, string>
 }
 
-const App: FunctionalComponent<Props> = ({ Monaco, /*  esbuildWorker, astroWorker, htmlWorker, */ initialModels = {} }) => {
+const App: FunctionalComponent<Props> = ({ Monaco, initialModels = {} }) => {
   const editorRef = useRef<HTMLElement | null>(null);
   const { editor, models, currentModel, value, setTab, addTab, removeTab } = useMonaco(Monaco, editorRef, initialModels);
 
@@ -127,15 +127,15 @@ const name = "Component"
       postMessage({
         event: "build",
         details: Object.assign(
-            {
-              models: models.map(model => {
-                const filename = model.uri.path;
-                const value = model.getValue();
-                return { filename, value };
-              }),
-            },
-            getCurrent()
-          )
+          {
+            models: models.map(model => {
+              const filename = model.uri.path;
+              const value = model.getValue();
+              return { filename, value };
+            }),
+          },
+          getCurrent()
+        )
       });
     }
   };
@@ -146,7 +146,7 @@ const name = "Component"
     setErr(`${type}\n${message}`);
     setTimeout(() => {
       setErr(null);
-    }, 1500)
+    }, 1500);
   });
 
   WorkerEvents.on("error", (details) => {

@@ -34,6 +34,8 @@ import { debounce, throttle } from "../../utils";
 
 import { encode, decode } from "../../utils/encode-decode";
 
+import { encode, decode } from "../../utils/encode-decode";
+
 import type { Highlighter } from 'shiki';
 
 interface TimingObject {
@@ -84,13 +86,13 @@ const initEvent = new EventEmitter();
 
 const start = (port) => {
     const BuildEvents = new EventEmitter();
-    vol.fromJSON({}, `/`);
+    vol.fromJSON({}, `/`);  
 
     const postMessage = (obj: any) => {
-        let messageStr = JSON.stringify(obj); // compress()
+        let messageStr = JSON.stringify(obj);
         let encodedMessage = encode(messageStr);
-        port.postMessage(encodedMessage, [encodedMessage.buffer]); // 
-    }
+        port.postMessage(encodedMessage , [encodedMessage.buffer]); 
+    };         
     
     initEvent.on({
         // When the SharedWorker first loads, tell the page that esbuild has initialized  
@@ -113,9 +115,9 @@ const start = (port) => {
 
     // If another page loads while SharedWorker is still active, tell that page that esbuild is initialized
     if (_initialized) 
-        initEvent.emit("init"); 
-    
-    BuildEvents.on("build", debounce((details) => { // 
+        initEvent.emit("init");
+        
+    BuildEvents.on("build", debounce((details) => {
         if (!_initialized) {
             postMessage({
                 event: "warn",
@@ -133,6 +135,7 @@ const start = (port) => {
         let html, js, shiki;
 
         if (models.length <= 0 && current) models = [current];
+
         (async () => {
             try {
                 // Preload all components and files to avoid esbuild building while still missing files
@@ -149,9 +152,6 @@ const start = (port) => {
                     let filename: string = `${data.filename}`;
                     let outfile = `/dist/${filename.slice('/src/pages/'.length)}`;
                     let input: string = `${data.value}`.trim(); // Ensure input is a string
-
-                    // fs.mkdirpSync(path.dirname(filename));
-                    // fs.writeFileSync(filename, input);
 
                     if (input.length <= 0) continue;
 
@@ -307,10 +307,10 @@ const start = (port) => {
                 return;
             }
         })();
-    }, 30)); // 
+    }, 30));
 
-    port.onmessage = ({ data }) => {
-        let { event, details } = JSON.parse(decode(data)); // decompress()
+    port.onmessage = ({ data }) => {    
+        let { event, details } = JSON.parse(decode(data)); 
         BuildEvents.emit(event, details);
     };
 }
