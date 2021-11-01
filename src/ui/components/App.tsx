@@ -18,6 +18,8 @@ import useWindowSize from '../hooks/useWindowSize';
 import { BuildWorker, WorkerEvents } from '../../utils/WebWorker';
 import { debounce } from '../../utils';
 
+import { encode, decode } from "../../utils/encode-decode";
+
 let initialized = false;
 
 WorkerEvents.on({
@@ -30,10 +32,16 @@ WorkerEvents.on({
   },
 })
 
+const postMessage = (obj: any) => {
+  let messageStr = JSON.stringify(obj);
+  let encodedMessage = encode(messageStr);
+  BuildWorker.postMessage(encodedMessage , [encodedMessage.buffer]); 
+}
+
 BuildWorker.addEventListener(
-  "message",
-  ({ data }: MessageEvent<{ event: string; details: any }>) => {
-    let { event, details } = data;
+"message",
+  ({ data }: MessageEvent<Uint8Array>) => {
+    let { event, details } = JSON.parse(decode(data));
     WorkerEvents.emit(event, details);
   }
 );
@@ -43,7 +51,7 @@ export interface Props {
   initialModels?: Record<string, string>
 }
 
-const App: FunctionalComponent<Props> = ({ Monaco, /*  esbuildWorker, astroWorker, htmlWorker, */ initialModels = {} }) => {
+const App: FunctionalComponent<Props> = ({ Monaco, initialModels = {} }) => {
   const editorRef = useRef<HTMLElement | null>(null);
   const { editor, models, currentModel, value, setTab, addTab, removeTab } = useMonaco(Monaco, editorRef, initialModels);
 
@@ -115,19 +123,17 @@ const name = "Component"
 
   let updateModels = () => {
     if (models.length > 0) {
-      BuildWorker.postMessage({
+      postMessage({
         event: "build",
-        details: JSON.stringify(
-          Object.assign(
-            {
-              models: models.map(model => {
-                const filename = model.uri.path;
-                const value = model.getValue();
-                return { filename, value };
-              }),
-            },
-            getCurrent()
-          )
+        details: Object.assign(
+          {
+            models: models.map(model => {
+              const filename = model.uri.path;
+              const value = model.getValue();
+              return { filename, value };
+            }),
+          },
+          getCurrent()
         )
       });
     }
@@ -139,7 +145,7 @@ const name = "Component"
     setErr(`${type}\n${message}`);
     setTimeout(() => {
       setErr(null);
-    }, 1500)
+    }, 1500);
   });
 
   WorkerEvents.on("error", (details) => {
@@ -174,9 +180,9 @@ const name = "Component"
   WorkerEvents.on("build", debounce(() => {
     let { current } = getCurrent() ?? {};
     if (current == null) return;
-    BuildWorker.postMessage({
+    postMessage({
       event: "build",
-      details: JSON.stringify({ current })
+      details: { current }
     });
   }, 40));
 

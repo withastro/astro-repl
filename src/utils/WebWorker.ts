@@ -6,7 +6,7 @@ import BUILD_WORKER_URL from 'worker:../editor/workers/build.ts';
 export const WorkerEvents = new EventEmitter();
 export const BuildWorker = new WebWorker(BUILD_WORKER_URL, {
     name: 'build-worker',
-    type: 'module',
+    type: 'module'
 });
 
 BuildWorker.start();
