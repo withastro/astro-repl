@@ -59,7 +59,7 @@ export const VIRTUAL_FS = ({ filename, transform }: { filename: string, transfor
                     try {
                         tsContent = await transform(content, { internalURL: '/play/@astro/internal.min.js', sourcemap: false, sourcefile: '/#' + filename }).then(res => res.code);
                     } catch (e) {
-                        console.log(e);
+                        console.log('virtualfs astro transform error', e);
                     }
                     return {
                         contents: tsContent,

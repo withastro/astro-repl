@@ -19,6 +19,7 @@ import { BuildWorker, WorkerEvents } from '../../utils/WebWorker';
 import { debounce } from '../../utils';
 
 import { compress, decompress } from '@amoutonbrady/lz-string';
+import { encode, decode } from "../../utils/encode-decode";
 
 let initialized = false;
 let ready = false;
@@ -33,10 +34,16 @@ WorkerEvents.on({
   },
 })
 
+const postMessage = (obj: any) => {
+    let messageStr = JSON.stringify(obj); // compress()
+    let encodedMessage = encode(messageStr);
+    BuildWorker.postMessage(encodedMessage , [encodedMessage.buffer]); //
+}
+
 BuildWorker.addEventListener(
   "message",
-  ({ data }: MessageEvent<string>) => {
-    let { event, details } = JSON.parse(decompress(data));
+  ({ data }: MessageEvent<Uint8Array>) => {
+    let { event, details } = JSON.parse(decode(data)); // decompress()
     WorkerEvents.emit(event, details);
   }
 );
@@ -118,7 +125,7 @@ const name = "Component"
 
   let updateModels = () => {
     if (models.length > 0) {
-      BuildWorker.postMessage(compress(JSON.stringify({
+      postMessage({
         event: "build",
         details: Object.assign(
             {
@@ -130,9 +137,9 @@ const name = "Component"
             },
             getCurrent()
           )
-      })));
+      });
     }
-  }
+  };
 
   WorkerEvents.on("warn", (details) => {
     let { type, message } = details;
@@ -175,11 +182,11 @@ const name = "Component"
   WorkerEvents.on("build", debounce(() => {
     let { current } = getCurrent() ?? {};
     if (current == null) return;
-    BuildWorker.postMessage(compress(JSON.stringify({
+    postMessage({
       event: "build",
       details: { current }
-    })));
-  }, 40));
+    });
+  }, 80));
 
   WorkerEvents.on("ready", () => {
     console.log("Ready");
@@ -190,9 +197,10 @@ const name = "Component"
   useEffect(() => {
     if (!initialized || !ready) return;
     updateModels();
+    console.log("Models updates")
   }, [models])
 
-  useEffect(() => {
+  useEffect(() => { //
     if (!initialized) return;
     WorkerEvents.emit("build");
   }, [value]);

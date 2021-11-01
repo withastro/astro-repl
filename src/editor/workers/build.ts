@@ -5,7 +5,7 @@ import { getHighlighter, setCDN } from 'shiki';
 import { transform, initialize as AstroInitialize } from '@astrojs/compiler';
 
 import path from "path";
-import { fs, vol } from "memfs";
+import { Volume } from "memfs";
 
 // @ts-ignore
 import prettier from 'prettier/esm/standalone.mjs';
@@ -30,12 +30,10 @@ import { VIRTUAL_FS } from "../plugins/virtual-fs";
 import { WASM } from "../plugins/wasm";
 
 import { renderAstroToHTML } from "../../utils/astro";
-import { debounce } from "../../utils";
+import { debounce, throttle } from "../../utils";
 
 import { compress, decompress } from '@amoutonbrady/lz-string';
-
-import { rollup } from "rollup";
-import virtual from "@rollup/plugin-virtual";
+import { encode, decode } from "../../utils/encode-decode";
 
 import type { Highlighter } from 'shiki';
 
@@ -87,40 +85,46 @@ const initEvent = new EventEmitter();
 
 const start = (port) => {
     const BuildEvents = new EventEmitter();
-    vol.fromJSON({}, `/`);
+    let fs = Volume.fromJSON({}, `/`);
+
+    const postMessage = (obj: any) => {
+        let messageStr = JSON.stringify(obj); // compress()
+        let encodedMessage = encode(messageStr);
+        port.postMessage(encodedMessage, [encodedMessage.buffer]); // 
+    }
     
     initEvent.on({
         // When the SharedWorker first loads, tell the page that esbuild has initialized  
         init() {
-            port.postMessage(compress(JSON.stringify({
+            postMessage({
                 event: "init",
                 details: {}
-            })));
+            });
         },
         error(err) {         
-            port.postMessage(compress(JSON.stringify({
+            postMessage({
                 event: "error",
                 details: {
                     type: `Error initializing, you may need to close and reopen all currently open pages pages`,
                     error: err,
                 }
-            })));
+            });
         }
     });
 
     // If another page loads while SharedWorker is still active, tell that page that esbuild is initialized
     if (_initialized) 
         initEvent.emit("init"); 
-
-    BuildEvents.on("build", debounce((details) => {
+    
+    BuildEvents.on("build", debounce((details) => { // 
         if (!_initialized) {
-            port.postMessage(compress(JSON.stringify({
+            postMessage({
                 event: "warn",
                 details: {
                     type: `Build worker not initialized`,
                     message: `You need to wait for a little bit before trying to build astro files`
                 }
-            })));
+            });
 
             return;
         }
@@ -129,17 +133,30 @@ const start = (port) => {
         let files = [];
         let html, js, shiki;
 
+        if (models.length > 1) {
+            fs = Volume.fromJSON({}, `/`);
+        }
+
         if (models.length <= 0 && current) models = [current];
         (async () => {
             try {
+                // Preload all components and files to avoid esbuild building while still missing files
+                for (let data of models) {
+                    let filename: string = `${data.filename}`;
+                    let input: string = `${data.value}`.trim(); // Ensure input is a string
+
+                    fs.mkdirpSync(path.dirname(filename));
+                    fs.writeFileSync(filename, input);
+                }
+
                 /* Esbuild */
                 for (let data of models) {
                     let filename: string = `${data.filename}`;
                     let outfile = `/dist/${filename.slice('/src/pages/'.length)}`;
                     let input: string = `${data.value}`.trim(); // Ensure input is a string
 
-                    fs.mkdirpSync(path.dirname(filename));
-                    fs.writeFileSync(filename, input);
+                    // fs.mkdirpSync(path.dirname(filename));
+                    // fs.writeFileSync(filename, input);
 
                     if (input.length <= 0) continue;
 
@@ -199,35 +216,6 @@ const start = (port) => {
 
                     content = await fs.promises.readFile(outfile, "utf-8") as string;
                     content = content?.trim?.(); // Remove unesscary space
-
-                    // try {
-                    //     const bundle = await rollup({
-                    //         input: "entry",
-                    //         treeshake: true,
-                    //         plugins: [
-                    //             virtual({
-                    //                 entry: content
-                    //             })
-                    //         ]
-                    //     });
-        
-                    //     const { output } = await bundle.generate({
-                    //         format: "umd",
-                    //         sourcemap: false,
-                    //         minifyInternalExports: false,
-                    //         name: "bundler"
-                    //     });
-        
-                    //     content = output[0].code?.trim?.() ?? content; // Remove unesscary space
-        
-                    //     // // Closes the bundle
-                    //     // await bundle.close();
-                    // } catch (error) {
-                    //     throw {
-                    //         type: `rollup treeshaking error`,
-                    //         error
-                    //     };
-                    // }
 
                     const output = await renderAstroToHTML(content);
                     if (typeof output === 'string')
@@ -301,33 +289,33 @@ const start = (port) => {
                     }
                 }
 
-                port.postMessage(compress(JSON.stringify({
+                postMessage({
                     event: "result",
                     details: {
                         type: `Build complete`,
                         values: files,
                         js, html, shiki
                     }
-                })));
+                });
             } catch (error) {
                 // @ts-ignore
                 let err = (error?.error ?? error);
-                port.postMessage(compress(JSON.stringify({
+                postMessage({
                     event: "error",
                     details: {
                         type: `${error?.type ?? "Build"} error`,
                         error: "error" in error ? err.error?.message : err
                     }
-                })));
+                });
 
                 console.warn(err);
                 return;
             }
         })();
-    }, 80));
+    }, 30)); // 
 
     port.onmessage = ({ data }) => {
-        let { event, details } = JSON.parse(decompress(data));
+        let { event, details } = JSON.parse(decode(data)); // decompress()
         BuildEvents.emit(event, details);
     };
 }

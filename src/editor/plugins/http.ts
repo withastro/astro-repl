@@ -59,12 +59,21 @@
 // Based on https://github.com/hardfist/neo-tools/blob/main/packages/bundler/src/plugins/http.ts
 import type { Plugin } from 'esbuild';
 
+export const CACHE = new Map();
 export async function fetchPkg(url: string) {
-    const res = await fetch(url);
-    return {
-        url: res.url,
-        content: await res.text(),
-    };
+    let result;
+    if (CACHE.has(url) && CACHE.size < 100) 
+        result = CACHE.get(url);
+    else {
+        let res = await fetch(url);
+        result = {
+            url: res.url,
+            content: await res.text(),
+        };
+        CACHE.set(url, result);
+    }
+
+    return result;
 }
 
 export const HTTP_NAMESPACE = 'http-url';

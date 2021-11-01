@@ -288,8 +288,10 @@ export async function renderSlot(result: any, slotted: string, fallback?: any) {
 export async function renderComponent(result: SSRResult, displayName: string, Component: unknown, _props: Record<string | number, any>, slots: any = {}) {
   Component = await Component;
   const children = await renderSlot(result, slots?.default);
-  console.log(slots)
-  const { renderers } = result._metadata;
+
+  // No renderers for the repl
+  // const { renderers } = result._metadata;
+  const renderers = [];
 
   if (Component && (Component as any).isAstroComponentFactory) {
     const output = await renderToString(result, Component as any, _props, slots);
@@ -379,7 +381,7 @@ export function createAstro(fileURLStr: string, site: string): TopLevelAstro {
   try {
    url = new URL(((fileURLStr as unknown) instanceof URL ? (fileURLStr as unknown as URL).href : fileURLStr) ?? globalThis.location.href);
   } catch (e) {
-    console.log(e)
+    console.log("createAstro Error", e)
   }
   const fetchContent = createFetchContentFn(url) as unknown as TopLevelAstro['fetchContent'];
   return {
