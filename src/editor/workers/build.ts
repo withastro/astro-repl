@@ -210,17 +210,18 @@ const start = (port) => {
                             ],
                             globalName: 'bundler',
                         });
-
-                        result?.outputFiles?.forEach((x) => {
-                            if (!fs.existsSync(path.dirname(x.path))) {
-                                fs.mkdirSync(path.dirname(x.path));
-                            }
-
-                            fs.writeFileSync(x.path, x.text);
-                        });
                     } catch (e) {
+                        console.warn(e);
                         throw { type: "esbuild", error: e };
                     }
+
+                    result?.outputFiles?.forEach((x) => {
+                        if (!fs.existsSync(path.dirname(x.path))) {
+                            fs.mkdirSync(path.dirname(x.path));
+                        }
+
+                        fs.writeFileSync(x.path, x.text);
+                    });
 
                     if (result?.errors.length > 0)
                         throw { type: "esbuild", error: result.errors };
