@@ -2,6 +2,8 @@
 import { CDN_NAMESPACE } from './cdn';
 import path from 'path';
 
+import { ModuleWorkerSupported } from "../../utils/index"; 
+
 import type { Plugin } from 'esbuild';
 
 export const HOST = 'https://cdn.skypack.dev/';
@@ -40,21 +42,23 @@ export const BARE = (): Plugin => {
 
           let parentFileExt = path.extname(args.pluginData.parentUrl).replace(/^./, '');
           let fileExt = path.extname(pathUrl).replace(/^./, '');
-
-          // if (!fileExt || fileExt === 'js') {
-          //   return {
-          //     path: pathUrl,
-          //     namespace: 'external',
-          //     external: true,
-          //   };
-          // }
+          
+          if (ModuleWorkerSupported) {
+            if (!fileExt || fileExt === 'js') {
+              return {
+                path: pathUrl,
+                namespace: 'external',
+                external: true,
+              };
+            }
+          }
 
           let parentPathIsTS = fileExt == '' && /tsx?|jsx/.test(parentFileExt);
           if (parentPathIsTS) {
             pathUrl += `.` + parentFileExt;
           }
-          let pathIsTS = /tsx?|jsx/.test(fileExt);
 
+          let pathIsTS = /tsx?|jsx/.test(fileExt);
           let loader = undefined;
           switch (fileExt) {
             case 'ts':

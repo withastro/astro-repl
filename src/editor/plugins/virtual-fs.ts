@@ -16,6 +16,7 @@ export const resolve = ({ id, importer }: { id: string; importer: string }) => {
 };
 
 import { CDN_NAMESPACE } from "./cdn";
+import { ModuleWorkerSupported } from '../../utils';
 export const VIRTUAL_FS = ({ filename, transform }: { filename: string, transform: typeof TypeAstroTransform }): Plugin => {
     return {
         name: VIRTUAL_FS_NAMESPACE,
@@ -25,9 +26,9 @@ export const VIRTUAL_FS = ({ filename, transform }: { filename: string, transfor
                     let pathUrl = new URL(args.path, self.location.origin).toString();
                     return {
                         path: pathUrl,
-                        namespace: CDN_NAMESPACE, //'external',
-                        pluginData: { ...args.pluginData, loader: 'ts', pathUrl: pathUrl },
-                        // external: true
+                        pluginData: ModuleWorkerSupported ? {} : { ...args.pluginData, loader: 'ts', pathUrl: pathUrl },
+                        namespace: ModuleWorkerSupported ? 'external' : CDN_NAMESPACE,
+                        external: ModuleWorkerSupported
                     }
                 }
 

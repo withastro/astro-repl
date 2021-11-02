@@ -47,6 +47,10 @@ BuildWorker.addEventListener(
   }
 );
 
+let Models = [];
+const difference = (a, b) => [...new Set(
+  [...new Set(a)].filter(x => !new Set(b).has(x)))];
+
 export interface Props {
   Monaco: typeof import('../../editor/modules/monaco');
   initialModels?: Record<string, string>
@@ -124,19 +128,23 @@ const name = "Component"
 
   let updateModels = () => {
     if (models.length > 0) {
+      let _models = models.map(model => {
+        const filename = model.uri.path;
+        const value = model.getValue();
+        return { filename, value };
+      });
+
       postMessage({
         event: "build",
         details: Object.assign(
           {
-            models: models.map(model => {
-              const filename = model.uri.path;
-              const value = model.getValue();
-              return { filename, value };
-            }),
+            models: _models,
           },
           getCurrent()
         )
       });
+
+      Models = [..._models].map((x) => `${(x as any).filename}`);
     }
   };
 
@@ -195,8 +203,24 @@ const name = "Component"
 
   useEffect(() => {
     if (!initialized || !ready) return;
+    
+    let diff = difference(
+      models.map(model => {
+        const filename = model.uri.path;
+        return `${filename}`;
+      }), 
+      Models
+    );
+    console.log(diff, models)
+
+    postMessage({
+      event: "delete",
+      details: {
+        filenames: diff
+      }
+    })
+
     updateModels();
-    console.log("Models updates")
   }, [models])
 
   useEffect(() => { //

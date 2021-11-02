@@ -33,8 +33,7 @@ import { renderAstroToHTML } from "../../utils/astro";
 import { debounce, throttle } from "../../utils";
 
 import { encode, decode } from "../../utils/encode-decode";
-
-import { encode, decode } from "../../utils/encode-decode";
+import { ModuleWorkerSupported } from "../../utils/index";
 
 import type { Highlighter } from 'shiki';
 
@@ -116,6 +115,20 @@ const start = (port) => {
     // If another page loads while SharedWorker is still active, tell that page that esbuild is initialized
     if (_initialized) 
         initEvent.emit("init");
+
+    BuildEvents.on("delete", (details) => {
+        let { filenames = [] } = details ?? {};
+        console.log(filenames)
+        for (let filename of filenames) {
+            if (fs.existsSync(filename)) {
+                try {
+                    fs.unlinkSync(filename);
+                } catch (e) {
+                    console.warn("File delete error: ", e)
+                }
+            }
+        }
+    });
         
     BuildEvents.on("build", debounce((details) => {
         if (!_initialized) {
@@ -169,8 +182,7 @@ const start = (port) => {
                         write: false,
                         outfile,
                         platform: "browser",
-                        // format: "esm",
-                        format: "iife",
+                        format: ModuleWorkerSupported ? "esm" : "iife",
                         loader: {
                             '.png': 'file',
                             '.jpeg': 'file',

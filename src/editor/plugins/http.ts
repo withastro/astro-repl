@@ -1,9 +1,10 @@
 // Based on https://github.com/hardfist/neo-tools/blob/main/packages/bundler/src/plugins/http.ts
 import type { Plugin } from 'esbuild';
+import { ModuleWorkerSupported } from "../../utils/index";
 
 export const CACHE = new Map();
 export async function fetchPkg(url: string) {
-    let result;
+    let result: { url: string; content: string; };
     if (CACHE.has(url) && CACHE.size < 100) 
         result = CACHE.get(url);
     else {        
@@ -29,10 +30,11 @@ export const HTTP = (): Plugin => {
             // Tag them with the "http-url" namespace to associate them with
             // this plugin.
             build.onResolve({ filter: /^https?:\/\// }, args => {
-                return {
+                return Object.assign({
                     path: new URL(args.path, args.resolveDir.replace(/^\//, '')).toString(),
-                    namespace: HTTP_NAMESPACE,
-                };
+                    namespace: ModuleWorkerSupported ? 'external' : HTTP_NAMESPACE,
+                    external: ModuleWorkerSupported
+                });
             });
 
             // We also want to intercept all import paths inside downloaded
@@ -43,7 +45,8 @@ export const HTTP = (): Plugin => {
             build.onResolve({ filter: /.*/, namespace: HTTP_NAMESPACE }, args => {
                 return {
                     path: new URL(args.path, args.importer).toString(),
-                    namespace: HTTP_NAMESPACE,
+                    namespace: ModuleWorkerSupported ? 'external' : HTTP_NAMESPACE,
+                    external: ModuleWorkerSupported
                 };
             });
 

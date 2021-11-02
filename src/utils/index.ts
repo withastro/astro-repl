@@ -1,5 +1,32 @@
 export * from './astro';
 
+// https://stackoverflow.com/questions/62954570/javascript-feature-detect-module-support-for-web-workers
+export const ModuleWorkerTest = () => {
+  let supports = false;
+  const tester = {
+      // It's been called, it's supported
+      get type() {
+          supports = true;
+          return;
+      }
+  };
+
+  try {
+      // We use "blob://" as url to avoid an useless network request.
+      // This will either throw in Chrome
+      // either fire an error event in Firefox
+      // which is perfect since
+      // we don't need the worker to actually start,
+      // checking for the type of the script is done before trying to load it.
+      // @ts-ignore
+      new Worker('blob://', tester);
+  } finally {
+      return supports;
+  }
+};
+
+export let ModuleWorkerSupported = ModuleWorkerTest();
+
 /**
  * debounce function
  * use timer to maintain internal reference of timeout to clear

@@ -1,13 +1,18 @@
+import { ModuleWorkerSupported } from './index';
 import { renderPage } from '../@astro/internal/index';
 
 export async function renderAstroToHTML(content: string): Promise<string | { errors: string[] }> {
-    // const url = `data:application/javascript;base64,${Buffer.from(content).toString('base64')}`;
     let mod;
     let html;
 
     var bundler;
     try {
-        mod = new Function(`${content} return bundler;`)().default;
+        if (ModuleWorkerSupported) {
+            const url = `data:application/javascript;base64,${Buffer.from(content).toString('base64')}`;
+            ({ default: mod } = await import(url));
+        } else {
+            ({ default: mod } = new Function(`${content} return bundler;`)());
+        }
     } catch (e) {
         return {
             errors: [e]
