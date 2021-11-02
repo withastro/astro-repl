@@ -72,6 +72,15 @@ export interface Props {
   initialModels?: Record<string, string>
 }
 
+// Fix the ask to confirm error
+function beforeUnloadListener(event) {
+  event.preventDefault();
+  return event.returnValue = 'Are you sure you want to exit? Your work will be lost!';
+};
+
+// A function that invokes a callback when the page has unsaved changes.
+window.addEventListener('beforeunload', beforeUnloadListener);
+
 const App: FunctionalComponent<Props> = ({ Monaco, initialModels = {} }) => {
   const editorRef = useRef<HTMLElement | null>(null);
   const { editor, models, currentModel, value, setTab, addTab, removeTab } = useMonaco(Monaco, editorRef, initialModels);
@@ -114,11 +123,6 @@ const name = "Component"
   const onSetTab = (model) => {
     setTab(model);
   };
-
-  // confirm exit before navigating
-  useEffect(() => {
-    window.onbeforeunload = () => confirm(`Exit Astro Play? Your work will be lost!`);
-  }, []);
 
   const trackedValue = useRef({ value: '', start: 0 });
   const [js, setJs] = useState('');
