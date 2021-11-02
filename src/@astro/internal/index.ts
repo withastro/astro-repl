@@ -4,105 +4,12 @@ import shorthash from 'shorthash';
 export { createMetadata } from './metadata';
 
 type SSRResult = any;
+type SSRElement = any;
 type AstroComponentMetadata = any; 
 type Renderer = any; 
 type TopLevelAstro = any;
 
-export function spreadAttributes(values: Record<any, any>) {
-  let output = '';
-  for (const [key, value] of Object.entries(values)) {
-    output += addAttribute(value, key);
-  }
-  return output;
-}
-
-function serializeListValue(value: any) {
-  const hash: Record<string, any> = {};
-
-  push(value);
-
-  return Object.keys(hash).join(' ');
-
-  function push(item: any) {
-    // push individual iteratables
-    if (item && typeof item.forEach === 'function') item.forEach(push);
-    // otherwise, push object value keys by truthiness
-    else if (item === Object(item))
-      Object.keys(item).forEach((name) => {
-        if (item[name]) push(name);
-      });
-    // otherwise, push any other values as a string
-    else {
-      // get the item as a string
-      item = item == null ? '' : String(item).trim();
-
-      // add the item if it is filled
-      if (item) {
-        item.split(/\s+/).forEach((name: string) => {
-          hash[name] = true;
-        });
-      }
-    }
-  }
-}
-
-export function defineStyleVars(selector: string, vars: Record<any, any>) {
-  let output = '\n';
-  for (const [key, value] of Object.entries(vars)) {
-    output += `  --${key}: ${value};\n`;
-  }
-  return `${selector} {${output}}`;
-}
-
-export function defineScriptVars(vars: Record<any, any>) {
-  let output = '';
-  for (const [key, value] of Object.entries(vars)) {
-    output += `let ${key} = ${JSON.stringify(value)};\n`;
-  }
-  return output;
-}
-
-export async function renderAstroComponent(component: InstanceType<typeof AstroComponent>) {
-  let template = '';
-
-  for await (const value of component) {
-    if (value || value === 0) {
-      template += value;
-    }
-  }
-
-  return template;
-}
-
-export async function renderToString(result: any, componentFactory: AstroComponentFactory, props: any, children: any = {}) {
-  const Component = await componentFactory(result, props, children);
-  let template = await renderAstroComponent(Component);
-  return template
-}
-
-export async function renderPage(result: any, Component: AstroComponentFactory, props: any, children: any) {
-  const template = await renderToString(result, Component, props, children);
-  const styles = Array.from(result.styles).map(style => renderElement('style', style as any));
-  const scripts = Array.from(result.scripts).map(script => renderElement('script', script as any));
-  return template.replace("</head>", styles.join('\n') + scripts.join('\n') + "</head>");
-}
-
-function renderElement(name: string, { props: _props, children = ''}: { props: Record<any, any>, children?: string }) {
-  const { hoist: _, "data-astro-id": astroId, "define:vars": defineVars, ...props } = _props;
-  if (defineVars) {
-    if (name === 'style') {
-      children = defineStyleVars(astroId, defineVars) + '\n' + children;
-    }
-    if (name === 'script') {
-      children = defineScriptVars(defineVars) + '\n' + children;
-    }
-  }
-  return `<${name}${spreadAttributes(props)}>${children}</${name}>`
-}
-
 const { generate, GENERATOR } = astring;
-
-
 
 // A more robust version alternative to `JSON.stringify` that can handle most values
 // see https://github.com/remcohaszing/estree-util-value-to-estree#readme
@@ -242,7 +149,7 @@ interface HydrateScriptOptions {
 }
 
 /** For hydrated components, generate a <script type="module"> to load the component */
-async function generateHydrateScript(scriptOptions: HydrateScriptOptions, metadata: Required<AstroComponentMetadata>) {
+async function generateHydrateScript(scriptOptions: HydrateScriptOptions, metadata: Required<AstroComponentMetadata>): Promise<SSRElement> {
   const { renderer, astroId, props } = scriptOptions;
   const { hydrate, componentUrl, componentExport } = metadata;
 
@@ -263,13 +170,14 @@ async function generateHydrateScript(scriptOptions: HydrateScriptOptions, metada
   return () => {};
 `;
 
-  const hydrationScript = `<script type="module">
-import setup from 'astro/client/${hydrate}.js';
+  const hydrationScript = {
+    props: { type: 'module' },
+    children: `import setup from 'astro/client/${hydrate}.js';
 setup("${astroId}", {${metadata.hydrateArgs ? `value: ${JSON.stringify(metadata.hydrateArgs)}` : ''}}, async () => {
   ${hydrationSource}
 });
-</script>
-`;
+`,
+  };
 
   return hydrationScript;
 }
@@ -358,11 +266,11 @@ function createFetchContentFn(url: URL) {
         if (!mod.frontmatter) {
           return;
         }
-        const urlSpec = new URL(spec, url.origin).pathname;
+        const urlSpec = new URL(spec, url).pathname;
         return {
           ...mod.frontmatter,
           content: mod.metadata,
-          file: new URL(spec, url.origin),
+          file: new URL(spec, url),
           url: urlSpec.includes('/pages/') ? urlSpec.replace(/^.*\/pages\//, '/').replace(/(\/index)?\.md$/, '') : undefined,
         };
       })
@@ -372,13 +280,7 @@ function createFetchContentFn(url: URL) {
 }
 
 export function createAstro(fileURLStr: string, site: string): TopLevelAstro {
-  let url;
-  try {
-   url = new URL(((fileURLStr as unknown) instanceof URL ? (fileURLStr as unknown as URL).href : fileURLStr) ?? globalThis.location.href);
-  } catch (e) {
-    console.log("createAstro Error", e)
-  }
-  
+  const url = new URL(fileURLStr);
   const fetchContent = createFetchContentFn(url) as unknown as TopLevelAstro['fetchContent'];
   return {
     // TODO I think this is no longer needed.
@@ -402,4 +304,114 @@ export function addAttribute(value: any, key: string) {
   }
 
   return ` ${key}="${value}"`;
+}
+
+export function spreadAttributes(values: Record<any, any>) {
+  let output = '';
+  for (const [key, value] of Object.entries(values)) {
+    output += addAttribute(value, key);
+  }
+  return output;
+}
+
+function serializeListValue(value: any) {
+  const hash: Record<string, any> = {};
+
+  push(value);
+
+  return Object.keys(hash).join(' ');
+
+  function push(item: any) {
+    // push individual iteratables
+    if (item && typeof item.forEach === 'function') item.forEach(push);
+    // otherwise, push object value keys by truthiness
+    else if (item === Object(item))
+      Object.keys(item).forEach((name) => {
+        if (item[name]) push(name);
+      });
+    // otherwise, push any other values as a string
+    else {
+      // get the item as a string
+      item = item == null ? '' : String(item).trim();
+
+      // add the item if it is filled
+      if (item) {
+        item.split(/\s+/).forEach((name: string) => {
+          hash[name] = true;
+        });
+      }
+    }
+  }
+}
+
+export function defineStyleVars(selector: string, vars: Record<any, any>) {
+  let output = '\n';
+  for (const [key, value] of Object.entries(vars)) {
+    output += `  --${key}: ${value};\n`;
+  }
+  return `${selector} {${output}}`;
+}
+
+export function defineScriptVars(vars: Record<any, any>) {
+  let output = '';
+  for (const [key, value] of Object.entries(vars)) {
+    output += `let ${key} = ${JSON.stringify(value)};\n`;
+  }
+  return output;
+}
+
+export async function renderToString(result: SSRResult, componentFactory: AstroComponentFactory, props: any, children: any) {
+  const Component = await componentFactory(result, props, children);
+  let template = await renderAstroComponent(Component);
+  return template;
+}
+
+// Filter out duplicate elements in our set
+const uniqueElements = (item: any, index: number, all: any[]) => {
+  const props = JSON.stringify(item.props);
+  const children = item.children;
+  return index === all.findIndex((i) => JSON.stringify(i.props) === props && i.children == children);
+};
+
+export async function renderPage(result: SSRResult, Component: AstroComponentFactory, props: any, children: any) {
+  const template = await renderToString(result, Component, props, children);
+  const styles = Array.from(result.styles)
+    .filter(uniqueElements)
+    .map((style) => renderElement('style', style));
+  const scripts = Array.from(result.scripts)
+    .filter(uniqueElements)
+    .map((script) => renderElement('script', script));
+  return template.replace('</head>', styles.join('\n') + scripts.join('\n') + '</head>');
+}
+
+export async function renderAstroComponent(component: InstanceType<typeof AstroComponent>) {
+  let template = '';
+
+  for await (const value of component) {
+    if (value || value === 0) {
+      template += value;
+    }
+  }
+
+  return template;
+}
+
+function renderElement(name: string, { props: _props, children = '' }: SSRElement) {
+  // Do not print `hoist`, `lang`, `global`
+  const { lang: _, 'data-astro-id': astroId, 'define:vars': defineVars, ...props } = _props;
+  if (defineVars) {
+    if (name === 'style') {
+      if (props.global) {
+        children = defineStyleVars(`:root`, defineVars) + '\n' + children;
+      } else {
+        children = defineStyleVars(`.astro-${astroId}`, defineVars) + '\n' + children;
+      }
+      delete props.global;
+    }
+    if (name === 'script') {
+      delete props.hoist;
+      children = defineScriptVars(defineVars) + '\n' + children;
+    }
+  }
+  return `<${name}${spreadAttributes(props)}>${children}</${name}>`;
 }
