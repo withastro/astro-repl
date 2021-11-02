@@ -15,7 +15,7 @@ export async function renderAstroToHTML(content: string): Promise<string | { err
       }
   } catch (e) {
       return {
-          errors: [e]
+          errors: e
       }
   }
   if (!mod) {

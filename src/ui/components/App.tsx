@@ -2,7 +2,9 @@ import type { FunctionalComponent } from 'preact';
 import type { TabName } from '../const';
 import { h, Fragment } from 'preact';
 import { useRef, useCallback, useState, useEffect } from 'preact/hooks';
-import { Uri } from 'monaco-editor';
+import { Uri, editor as MonacoEditor } from 'monaco-editor';
+
+import type { Message } from "esbuild";
 
 import Editor from './Editor';
 import JS from './JS';
@@ -23,16 +25,6 @@ import { encode, decode } from "../../utils/encode-decode";
 let initialized = false;
 let ready = false;
 
-WorkerEvents.on({
-  init() {
-    console.log("Initalized");
-    initialized = true;
-
-    if (initialized)
-      WorkerEvents.emit("ready");
-  },
-})
-
 const postMessage = (obj: any) => {
   let messageStr = JSON.stringify(obj);
   let encodedMessage = encode(messageStr);
@@ -46,6 +38,24 @@ BuildWorker.addEventListener(
     WorkerEvents.emit(event, details);
   }
 );
+
+let warnFn, errFn, resultFn, buildFn, readyFn;
+warnFn = errFn = resultFn = buildFn = readyFn = (details: any) => {};
+
+WorkerEvents.on({
+  init() {
+    console.log("Initalized");
+    initialized = true;
+
+    if (initialized)
+      WorkerEvents.emit("ready");
+  },
+  warn: (details: any) => warnFn(details),
+  error: (details: any) => errFn(details),
+  result: (details: any) => resultFn(details),
+  build: (details: any) => buildFn(details),
+  ready: (details: any) => readyFn(details),
+});
 
 let Models = [];
 const difference = (a: any[], b: any[]) => {
@@ -154,33 +164,59 @@ const name = "Component"
     }
   };
 
-  WorkerEvents.on("warn", (details) => {
+  warnFn = (details) => {
     let { type, message } = details;
     console.warn(`${type}\n${message}`);
-    setErr(`${type}\n${message}`);
-    setTimeout(() => {
-      setErr(null);
-    }, 1500);
-  });
+    console.warn(message)
 
-  WorkerEvents.on("error", (details) => {
+    if (typeof message == "string") {
+      setErr(`${type}\n${message}`);
+      setTimeout(() => {
+        setErr(null);
+      }, 1500);
+    }
+  };
+
+  errFn = (details) => {
     let { type, error } = details;
-    console.error(
-      `${type} (please create a new issue in the repo)\n`,
-      error
-    );
-
     if (typeof error === 'object' && error.message) {
       const message = error.message.includes("virtualfs:") ?
         error.message?.split('virtualfs:')[1]?.split(' ').slice(1).join(' ').split('\n')[0]?.replace('error', 'Error') :
         error.message;
+
+      console.error(
+        `${type} (please create a new issue in the repo)\n`,
+        new Error(message) 
+      );
       setErr(JSON.stringify(message));
       return;
-    }
-    setErr(JSON.stringify(error));
-  });
+    } else if (Array.isArray(error) || Array.isArray(error?.errors)) {
+      let errArr = "errors" in error ? error.errors : error;
+      errArr.forEach((err: Message) => { 
+        let { location, text } = err as Message;
+        console.error(
+          `${type}\n`,
+          location.file + "\n", 
+          location.lineText + "\n", 
+          `^`.padStart(location.column + 1 + location.length / 2, " ") + "\n",
+          `${text}`.padStart(location.column + 1 + ( text.length) / 2, " ")
+        );
+      });
 
-  WorkerEvents.on("result", (details) => {
+      if (errArr.length > 0)
+        setErr(errArr[0].pluginName + ":" + errArr[0].text);
+
+      return;
+    } 
+
+    console.error(
+      `${type} (please create a new issue in the repo)\n`,
+      JSON.stringify(error)
+    );
+    setErr(JSON.stringify(error));
+  };
+
+  resultFn = (details) => {
     setErr(null);
     setLoading(false);
     if (details.html) setHtml(details.html?.content);
@@ -190,22 +226,22 @@ const name = "Component"
     }
 
     if (details.shiki) setformattedHtml(details.shiki?.content);
-  });
+  };
 
-  WorkerEvents.on("build", debounce(() => {
+  buildFn = debounce(() => {
     let { current } = getCurrent() ?? {};
     if (current == null) return;
     postMessage({
       event: "build",
       details: { current }
     });
-  }, 80));
+  }, 350);
 
-  WorkerEvents.on("ready", () => {
+  readyFn = () => {
     console.log("Ready");
     updateModels();
     ready = true;
-  });
+  };
 
   useEffect(() => {
     if (!initialized || !ready) return;

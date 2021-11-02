@@ -75,24 +75,24 @@ const initEvent = new EventEmitter();
             setCDN('https://unpkg.com/shiki/');
             highlighter = await getHighlighter({ theme: 'github-dark', langs: ['html', 'ts'] });
 
-            _initialized = true;    
-            initEvent.emit("init");    
+            _initialized = true;
+            initEvent.emit("init");
         }
-    } catch (error) { 
-        initEvent.emit("error", error);    
+    } catch (error) {
+        initEvent.emit("error", error);
     }
 })();
 
 const start = (port) => {
     const BuildEvents = new EventEmitter();
-    vol.fromJSON({}, `/`);  
+    vol.fromJSON({}, `/`);
 
     const postMessage = (obj: any) => {
         let messageStr = JSON.stringify(obj);
         let encodedMessage = encode(messageStr);
-        port.postMessage(encodedMessage , [encodedMessage.buffer]); 
-    };         
-    
+        port.postMessage(encodedMessage, [encodedMessage.buffer]);
+    };
+
     initEvent.on({
         // When the SharedWorker first loads, tell the page that esbuild has initialized  
         init() {
@@ -101,7 +101,7 @@ const start = (port) => {
                 details: {}
             });
         },
-        error(err) {         
+        error(err) {
             postMessage({
                 event: "error",
                 details: {
@@ -113,7 +113,7 @@ const start = (port) => {
     });
 
     // If another page loads while SharedWorker is still active, tell that page that esbuild is initialized
-    if (_initialized) 
+    if (_initialized)
         initEvent.emit("init");
 
     BuildEvents.on("delete", (details) => {
@@ -128,7 +128,7 @@ const start = (port) => {
             }
         }
     });
-        
+
     BuildEvents.on("build", debounce((details) => {
         if (!_initialized) {
             postMessage({
@@ -168,57 +168,62 @@ const start = (port) => {
                     if (input.length <= 0) continue;
 
                     let content: string = "";
-                    let result = await build({
-                        // sourcemap: 'inline',
-                        entryPoints: ['<stdin>'],
-                        bundle: true,
-                        minify: true,
-                        color: true,
-                        treeShaking: true,
-                        incremental: true,
-                        target: ["esnext"],
-                        logLevel: 'silent',
-                        write: false,
-                        outfile,
-                        platform: "browser",
-                        format: ModuleWorkerSupported ? "esm" : "iife",
-                        loader: {
-                            '.png': 'file',
-                            '.jpeg': 'file',
-                            '.ttf': 'file',
-                            '.svg': 'text',
-                            '.html': 'text',
-                            '.scss': 'css'
-                        },
-                        define: {
-                            "__NODE__": `false`,
-                            "process.env.NODE_ENV": `"production"`
-                        },
-                        plugins: [
-                            ALIAS(),
-                            EXTERNAL(),
-                            ENTRY(filename),
-                            JSON_PLUGIN(),
+                    let result: any;
+                    try {
+                        result = await build({
+                            // sourcemap: 'inline',
+                            entryPoints: ['<stdin>'],
+                            bundle: true,
+                            minify: true,
+                            color: true,
+                            treeShaking: true,
+                            incremental: true,
+                            target: ["esnext"],
+                            logLevel: 'silent',
+                            write: false,
+                            outfile,
+                            platform: "browser",
+                            format: ModuleWorkerSupported ? "esm" : "iife",
+                            loader: {
+                                '.png': 'file',
+                                '.jpeg': 'file',
+                                '.ttf': 'file',
+                                '.svg': 'text',
+                                '.html': 'text',
+                                '.scss': 'css'
+                            },
+                            define: {
+                                "__NODE__": `false`,
+                                "process.env.NODE_ENV": `"production"`
+                            },
+                            plugins: [
+                                ALIAS(),
+                                EXTERNAL(),
+                                ENTRY(filename),
+                                JSON_PLUGIN(),
 
-                            BARE(),
-                            HTTP(),
-                            CDN(),
-                            VIRTUAL_FS({ filename, transform }),
-                            WASM(),
-                        ],
-                        globalName: 'bundler',
-                    });
-                    
-                    result?.outputFiles?.forEach((x) => {
-                        if (!fs.existsSync(path.dirname(x.path))) {
-                            fs.mkdirSync(path.dirname(x.path));
-                        }
+                                BARE(),
+                                HTTP(),
+                                CDN(),
+                                VIRTUAL_FS({ filename, transform }),
+                                WASM(),
+                            ],
+                            globalName: 'bundler',
+                        });
 
-                        fs.writeFileSync(x.path, x.text);
-                    });
+                        result?.outputFiles?.forEach((x) => {
+                            if (!fs.existsSync(path.dirname(x.path))) {
+                                fs.mkdirSync(path.dirname(x.path));
+                            }
+
+                            fs.writeFileSync(x.path, x.text);
+                        });
+                    } catch (e) {
+                        throw { type: "esbuild", error: e };
+                    }
 
                     if (result?.errors.length > 0)
-                        throw result.errors[0];
+                        throw { type: "esbuild", error: result.errors };
 
                     content = await fs.promises.readFile(outfile, "utf-8") as string;
                     content = content?.trim?.(); // Remove unesscary space
@@ -227,7 +232,7 @@ const start = (port) => {
                     if (typeof output === 'string')
                         content = output;
                     else
-                        throw output.errors[0];
+                        throw { type: "astro-to-html", error: output.errors };
 
                     if (current?.filename == filename) {
                         html = { content, input };
@@ -305,23 +310,21 @@ const start = (port) => {
                 });
             } catch (error) {
                 // @ts-ignore
-                let err = (error?.error ?? error);
                 postMessage({
                     event: "error",
                     details: {
                         type: `${error?.type ?? "Build"} error`,
-                        error: "error" in error ? err.error?.message : err
+                        error: error.error ?? error
                     }
                 });
 
-                console.warn(err);
-                return;
+                console.warn(error.error ?? error);
             }
         })();
-    }, 30));
+    }, 50));
 
-    port.onmessage = ({ data }) => {    
-        let { event, details } = JSON.parse(decode(data)); 
+    port.onmessage = ({ data }) => {
+        let { event, details } = JSON.parse(decode(data));
         BuildEvents.emit(event, details);
     };
 }
