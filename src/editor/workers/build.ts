@@ -118,7 +118,6 @@ const start = (port) => {
 
     BuildEvents.on("delete", (details) => {
         let { filenames = [] } = details ?? {};
-        console.log(filenames)
         for (let filename of filenames) {
             if (fs.existsSync(filename)) {
                 try {

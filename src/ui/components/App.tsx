@@ -48,8 +48,14 @@ BuildWorker.addEventListener(
 );
 
 let Models = [];
-const difference = (a, b) => [...new Set(
-  [...new Set(a)].filter(x => !new Set(b).has(x)))];
+const difference = (a: any[], b: any[]) => {
+  let seta = new Set(a);
+  let setb = new Set(b);
+  return [
+    [...seta].filter(x => !setb.has(x)),  
+    [...setb].filter(x => !seta.has(x))
+  ].flat();
+}
 
 export interface Props {
   Monaco: typeof import('../../editor/modules/monaco');
@@ -211,19 +217,18 @@ const name = "Component"
       }), 
       Models
     );
-    console.log(diff, models)
 
     postMessage({
       event: "delete",
       details: {
         filenames: diff
       }
-    })
+    });
 
     updateModels();
   }, [models])
 
-  useEffect(() => { //
+  useEffect(() => { 
     if (!initialized) return;
     WorkerEvents.emit("build");
   }, [value]);
