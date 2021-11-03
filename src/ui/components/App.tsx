@@ -240,7 +240,7 @@ const name = "Component"
       event: "build",
       details: { current, ModuleWorkerSupported }
     });
-  }, 350);
+  }, 100);
 
   readyFn = () => {
     console.log("Ready");

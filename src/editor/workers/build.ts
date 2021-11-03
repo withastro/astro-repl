@@ -331,7 +331,7 @@ const start = (port) => {
                 console.warn(error.error ?? error);
             }
         })();
-    }, 50));
+    }, 150));
 
     port.onmessage = ({ data }) => {
         let { event, details } = JSON.parse(decode(data));

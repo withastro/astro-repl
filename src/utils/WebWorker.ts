@@ -5,15 +5,14 @@ import { SharedWorkerPolyfill as WebWorker } from '@okikio/sharedworker';
 import { ModuleWorkerSupported } from "./index";
 
 import BUILD_WORKER_URL from 'worker:../editor/workers/build.ts';
-export const WorkerEvents = new EventEmitter(); // WebWorker
+export const WorkerEvents = new EventEmitter(); 
 const BuildWorkerOptions = { 
     name: 'build-worker',
     type: ModuleWorkerSupported ? "module"  : "classic" 
  } as WorkerOptions;
 
-export const BuildWorker = new Worker(BUILD_WORKER_URL, BuildWorkerOptions);
-
-// BuildWorker.start();
+export const BuildWorker = new WebWorker(BUILD_WORKER_URL, BuildWorkerOptions);
+BuildWorker.start();
 
 export { WebWorker };
 export default WebWorker;
