@@ -215,7 +215,7 @@ const start = (port) => {
                         });
                     } catch (e) {
                         try {
-                            await EsbuildTransform("let x = 5;", { loader: "ts" })
+                            await EsbuildTransform("let x = 5;", { loader: "ts" });
                         } catch (err) {
                             await init();
                         }
@@ -331,7 +331,7 @@ const start = (port) => {
                 console.warn(error.error ?? error);
             }
         })();
-    }, 150));
+    }, 50));
 
     port.onmessage = ({ data }) => {
         let { event, details } = JSON.parse(decode(data));

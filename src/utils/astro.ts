@@ -6,7 +6,6 @@ export async function renderAstroToHTML(content: string, ModuleWorkerSupported: 
 
   var bundler;
   try {
-    console.log(ModuleWorkerSupported ? "module" : "classic")
       if (ModuleWorkerSupported) {
           const url = `data:application/javascript;base64,${Buffer.from(content).toString('base64')}`;
           ({ default: mod } = await import(url));
