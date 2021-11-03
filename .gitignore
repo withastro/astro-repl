@@ -118,3 +118,6 @@ dist
 .pnp.*
 
 .vercel
+
+# Local Netlify folder
+.netlify

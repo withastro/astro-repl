@@ -1,0 +1,11 @@
+[dev]
+command = "npm run start"
+port = 3000
+targetPort = 5000
+framework = "#custom"
+
+[[redirects]]
+  from = "/"
+  to = "/play"
+  status = 301
+  force = false
