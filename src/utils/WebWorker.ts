@@ -6,10 +6,10 @@ import { ModuleWorkerSupported } from "./index";
 
 import BUILD_WORKER_URL from 'worker:../editor/workers/build.ts';
 export const WorkerEvents = new EventEmitter(); // WebWorker
-const BuildWorkerOptions = Object.assign(
-    { name: 'build-worker' }, 
-    ModuleWorkerSupported ? { type: "module" } : null
-) as WorkerOptions;
+const BuildWorkerOptions = { 
+    name: 'build-worker',
+    type: ModuleWorkerSupported ? "module"  : "classic" 
+ } as WorkerOptions;
 
 export const BuildWorker = new Worker(BUILD_WORKER_URL, BuildWorkerOptions);
 

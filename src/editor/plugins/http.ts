@@ -1,6 +1,5 @@
 // Based on https://github.com/hardfist/neo-tools/blob/main/packages/bundler/src/plugins/http.ts
 import type { Plugin } from 'esbuild';
-import { ModuleWorkerSupported } from "../../utils/index";
 
 export const CACHE = new Map();
 export async function fetchPkg(url: string) {
@@ -21,7 +20,7 @@ export async function fetchPkg(url: string) {
 }
 
 export const HTTP_NAMESPACE = 'http-url';
-export const HTTP = (): Plugin => {
+export const HTTP = (ModuleWorkerSupported: boolean): Plugin => {
     return {
         name: 'http',
         setup(build) {

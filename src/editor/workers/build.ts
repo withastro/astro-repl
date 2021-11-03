@@ -1,4 +1,4 @@
-import { initialize as EsbuildInitialize, build } from "esbuild-wasm/esm/browser";
+import { initialize as EsbuildInitialize, build, transform as EsbuildTransform } from "esbuild-wasm/esm/browser";
 import { EventEmitter } from "@okikio/emitter";
 
 import { getHighlighter, setCDN } from 'shiki';
@@ -30,10 +30,9 @@ import { VIRTUAL_FS } from "../plugins/virtual-fs";
 import { WASM } from "../plugins/wasm";
 
 import { renderAstroToHTML } from "../../utils/astro";
-import { debounce, throttle } from "../../utils";
+import { debounce } from "../../utils";
 
 import { encode, decode } from "../../utils/encode-decode";
-import { ModuleWorkerSupported } from "../../utils/index";
 
 import type { Highlighter } from 'shiki';
 
@@ -60,8 +59,9 @@ let _initialized = false;
 
 const initEvent = new EventEmitter();
 
-(async () => {
+let init = async () => {
     try {
+        _initialized = false;
         if (!_initialized) {
             await EsbuildInitialize({
                 worker: false,
@@ -81,7 +81,9 @@ const initEvent = new EventEmitter();
     } catch (error) {
         initEvent.emit("error", error);
     }
-})();
+};
+
+init();
 
 const start = (port) => {
     const BuildEvents = new EventEmitter();
@@ -142,6 +144,7 @@ const start = (port) => {
             return;
         }
 
+        const { ModuleWorkerSupported } = details;
         let { models = [], current } = details ?? {};
         let files = [];
         let html, js, shiki;
@@ -202,15 +205,21 @@ const start = (port) => {
                                 ENTRY(filename),
                                 JSON_PLUGIN(),
 
-                                BARE(),
-                                HTTP(),
-                                CDN(),
-                                VIRTUAL_FS({ filename, transform }),
+                                BARE(ModuleWorkerSupported),
+                                HTTP(ModuleWorkerSupported),
+                                CDN(ModuleWorkerSupported),
+                                VIRTUAL_FS({ filename, transform }, ModuleWorkerSupported),
                                 WASM(),
                             ],
                             globalName: 'bundler',
                         });
                     } catch (e) {
+                        try {
+                            await EsbuildTransform("let x = 5;", { loader: "ts" })
+                        } catch (err) {
+                            await init();
+                        }
+
                         console.warn(e);
                         throw { type: "esbuild", error: e };
                     }
@@ -229,7 +238,7 @@ const start = (port) => {
                     content = await fs.promises.readFile(outfile, "utf-8") as string;
                     content = content?.trim?.(); // Remove unesscary space
 
-                    const output = await renderAstroToHTML(content);
+                    const output = await renderAstroToHTML(content, ModuleWorkerSupported);
                     if (typeof output === 'string')
                         content = output;
                     else

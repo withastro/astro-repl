@@ -1,13 +1,11 @@
 // Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/bare.ts
 import { CDN_NAMESPACE } from './cdn';
-import path from 'path';
-
-import { ModuleWorkerSupported } from "../../utils/index"; 
+import path from 'path'; 
 
 import type { Plugin } from 'esbuild';
 
 export const HOST = 'https://cdn.skypack.dev/';
-export const BARE = (): Plugin => {
+export const BARE = (ModuleWorkerSupported: boolean): Plugin => {
   return {
     name: 'bare',
     setup(build) {

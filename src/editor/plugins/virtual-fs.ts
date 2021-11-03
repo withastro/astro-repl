@@ -16,8 +16,7 @@ export const resolve = ({ id, importer }: { id: string; importer: string }) => {
 };
 
 import { CDN_NAMESPACE } from "./cdn";
-import { ModuleWorkerSupported } from '../../utils';
-export const VIRTUAL_FS = ({ filename, transform }: { filename: string, transform: typeof TypeAstroTransform }): Plugin => {
+export const VIRTUAL_FS = ({ filename, transform }: { filename: string, transform: typeof TypeAstroTransform }, ModuleWorkerSupported: boolean): Plugin => {
     return {
         name: VIRTUAL_FS_NAMESPACE,
         setup(build) {

@@ -2,13 +2,11 @@
 import { extname } from "path";
 import { fetchPkg } from './http';
 
-import { ModuleWorkerSupported } from "../../utils/index";
-
 import type { Plugin } from 'esbuild';
 import type { OnLoadArgs, OnLoadResult } from "esbuild-wasm";
 
 export const CDN_NAMESPACE = 'cdn';
-export const CDN = (): Plugin => {
+export const CDN = (ModuleWorkerSupported: boolean): Plugin => {
     return {
         name: CDN_NAMESPACE,
         setup(build) {

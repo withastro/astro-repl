@@ -18,7 +18,7 @@ import { TABS } from '../const';
 import useWindowSize from '../hooks/useWindowSize';
 
 import { BuildWorker, WorkerEvents } from '../../utils/WebWorker';
-import { debounce } from '../../utils';
+import { debounce, ModuleWorkerSupported } from '../../utils';
 
 import { encode, decode } from "../../utils/encode-decode";
 
@@ -159,6 +159,7 @@ const name = "Component"
         details: Object.assign(
           {
             models: _models,
+            ModuleWorkerSupported
           },
           getCurrent()
         )
@@ -237,7 +238,7 @@ const name = "Component"
     if (current == null) return;
     postMessage({
       event: "build",
-      details: { current }
+      details: { current, ModuleWorkerSupported }
     });
   }, 350);
 
