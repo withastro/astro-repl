@@ -9,21 +9,25 @@ import * as edworker from './editor';
 import { TypeScriptWorker } from '../../../node_modules/monaco-editor/esm/vs/language/typescript/tsWorker.js';
 
 const connect = (port) => {
-    let initialized = false;
-    port.onmessage = (e) => {
-        // ignore the first message
-        edworker.initialize(function (ctx, createData) {
-            return new TypeScriptWorker(ctx, createData);
-        }, port, initialized);
-    };
-}
+  let initialized = false;
+  port.onmessage = (e) => {
+    // ignore the first message
+    edworker.initialize(
+      function (ctx, createData) {
+        return new TypeScriptWorker(ctx, createData);
+      },
+      port,
+      initialized
+    );
+  };
+};
 
 // @ts-ignore
 self.onconnect = (e) => {
-    let [port] = e.ports;
-    connect(port)
-}
+  let [port] = e.ports;
+  connect(port);
+};
 
-if (!("SharedWorkerGlobalScope" in self)) {
-    connect(self);
+if (!('SharedWorkerGlobalScope' in self)) {
+  connect(self);
 }

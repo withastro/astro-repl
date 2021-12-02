@@ -18,37 +18,33 @@ import useWindowSize from '../hooks/useWindowSize';
 import { BuildWorker, WorkerEvents } from '../../utils/WebWorker';
 import { debounce } from '../../utils';
 
-import { encode, decode } from "../../utils/encode-decode";
+import { encode, decode } from '../../utils/encode-decode';
 
 let initialized = false;
 
 WorkerEvents.on({
   init() {
-    console.log("Initalized");
+    console.log('Initalized');
     initialized = true;
 
-    if (initialized)
-      WorkerEvents.emit("ready");
+    if (initialized) WorkerEvents.emit('ready');
   },
-})
+});
 
 const postMessage = (obj: any) => {
   let messageStr = JSON.stringify(obj);
   let encodedMessage = encode(messageStr);
-  BuildWorker.postMessage(encodedMessage , [encodedMessage.buffer]); 
-}
+  BuildWorker.postMessage(encodedMessage, [encodedMessage.buffer]);
+};
 
-BuildWorker.addEventListener(
-"message",
-  ({ data }: MessageEvent<Uint8Array>) => {
-    let { event, details } = JSON.parse(decode(data));
-    WorkerEvents.emit(event, details);
-  }
-);
+BuildWorker.addEventListener('message', ({ data }: MessageEvent<Uint8Array>) => {
+  let { event, details } = JSON.parse(decode(data));
+  WorkerEvents.emit(event, details);
+});
 
 export interface Props {
   Monaco: typeof import('../../editor/modules/monaco');
-  initialModels?: Record<string, string>
+  initialModels?: Record<string, string>;
 }
 
 const App: FunctionalComponent<Props> = ({ Monaco, initialModels = {} }) => {
@@ -104,7 +100,7 @@ const name = "Component"
   const [html, setHtml] = useState('');
   const [formattedHtml, setformattedHtml] = useState('');
 
-  const [err, setErr] = useState("");
+  const [err, setErr] = useState('');
   const [duration, setDuration] = useState(0);
 
   const getCurrent = () => {
@@ -116,30 +112,30 @@ const name = "Component"
     if (value) {
       trackedValue.current = { value, start: performance.now() };
       return {
-        current: { filename: model.uri.path, value }
+        current: { filename: model.uri.path, value },
       };
     }
-  }
+  };
 
   let updateModels = () => {
     if (models.length > 0) {
       postMessage({
-        event: "build",
+        event: 'build',
         details: Object.assign(
           {
-            models: models.map(model => {
+            models: models.map((model) => {
               const filename = model.uri.path;
               const value = model.getValue();
               return { filename, value };
             }),
           },
           getCurrent()
-        )
+        ),
       });
     }
-  }
+  };
 
-  WorkerEvents.on("warn", (details) => {
+  WorkerEvents.on('warn', (details) => {
     let { type, message } = details;
     console.warn(`${type}\n${message}`);
     setErr(`${type}\n${message}`);
@@ -148,24 +144,21 @@ const name = "Component"
     }, 1500);
   });
 
-  WorkerEvents.on("error", (details) => {
+  WorkerEvents.on('error', (details) => {
     let { type, error } = details;
-    console.error(
-      `${type} (please create a new issue in the repo)\n`,
-      error
-    );
+    console.error(`${type} (please create a new issue in the repo)\n`, error);
 
     if (typeof error === 'object' && error.message) {
-      const message = error.message.includes("virtualfs:") ?
-        error.message?.split('virtualfs:')[1]?.split(' ').slice(1).join(' ').split('\n')[0]?.replace('error', 'Error') :
-        error.message;
+      const message = error.message.includes('virtualfs:')
+        ? error.message?.split('virtualfs:')[1]?.split(' ').slice(1).join(' ').split('\n')[0]?.replace('error', 'Error')
+        : error.message;
       setErr(message);
       return;
     }
     setErr(error);
   });
 
-  WorkerEvents.on("result", (details) => {
+  WorkerEvents.on('result', (details) => {
     setErr(null);
     setLoading(false);
     if (details.html) setHtml(details.html?.content);
@@ -177,28 +170,31 @@ const name = "Component"
     if (details.shiki) setformattedHtml(details.shiki?.content);
   });
 
-  WorkerEvents.on("build", debounce(() => {
-    let { current } = getCurrent() ?? {};
-    if (current == null) return;
-    postMessage({
-      event: "build",
-      details: { current }
-    });
-  }, 40));
+  WorkerEvents.on(
+    'build',
+    debounce(() => {
+      let { current } = getCurrent() ?? {};
+      if (current == null) return;
+      postMessage({
+        event: 'build',
+        details: { current },
+      });
+    }, 40)
+  );
 
-  WorkerEvents.on("ready", () => {
-    console.log("Ready");
+  WorkerEvents.on('ready', () => {
+    console.log('Ready');
     updateModels();
   });
 
   useEffect(() => {
     if (!initialized) return;
     updateModels();
-  }, [models])
+  }, [models]);
 
   useEffect(() => {
     if (!initialized) return;
-    WorkerEvents.emit("build");
+    WorkerEvents.emit('build');
   }, [value]);
 
   return (

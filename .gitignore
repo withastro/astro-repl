@@ -118,3 +118,6 @@ dist
 .pnp.*
 
 .vercel
+
+
+/public/shiki
