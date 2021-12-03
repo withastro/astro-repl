@@ -7,34 +7,37 @@
 import { SimpleWorkerServer } from '../../../node_modules/monaco-editor/esm/vs/base/common/worker/simpleWorker.js';
 import { EditorSimpleWorker } from '../../../node_modules/monaco-editor/esm/vs/editor/common/services/editorSimpleWorker.js';
 export function initialize(foreignModule, port, initialized) {
-    if (initialized) {
-        return;
-    }
-    initialized = true;
-    const simpleWorker = new SimpleWorkerServer((msg) => {
-        port.postMessage(msg);
-    }, (host) => new EditorSimpleWorker(host, foreignModule));
-    port.onmessage = (e) => {
-        simpleWorker.onmessage(e.data);
-    };
+  if (initialized) {
+    return;
+  }
+  initialized = true;
+  const simpleWorker = new SimpleWorkerServer(
+    (msg) => {
+      port.postMessage(msg);
+    },
+    (host) => new EditorSimpleWorker(host, foreignModule)
+  );
+  port.onmessage = (e) => {
+    simpleWorker.onmessage(e.data);
+  };
 }
 
 const connect = (port) => {
-    let initialized = false;    
-    port.onmessage = (e) => {
-        // Ignore first message in this case and initialize if not yet initialized
-        if (!initialized) {
-            initialize(null, port, initialized);
-        }
-    };
-}
+  let initialized = false;
+  port.onmessage = (e) => {
+    // Ignore first message in this case and initialize if not yet initialized
+    if (!initialized) {
+      initialize(null, port, initialized);
+    }
+  };
+};
 
 // @ts-ignore
 self.onconnect = (e) => {
-    let [port] = e.ports;
-    connect(port)
-}
+  let [port] = e.ports;
+  connect(port);
+};
 
-if (!("SharedWorkerGlobalScope" in self)) {
-    connect(self);
+if (!('SharedWorkerGlobalScope' in self)) {
+  connect(self);
 }
