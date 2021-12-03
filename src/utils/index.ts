@@ -19,10 +19,13 @@ export const ModuleWorkerTest = () => {
     // checking for the type of the script is done before trying to load it.
     // @ts-ignore
     // data:application/javascript;base64,${Buffer.from("export {};").toString('base64')}
-    const worker = new Worker(`blob://`, test);
+    // const worker = new Worker(`blob://`, test);
+    const worker = new Worker(`data:application/javascript;base64,${Buffer.from("export {};").toString('base64')}`, test);
     worker.terminate();
     return support;
-  } catch (e) { } 
+  } catch (e) {
+    console.log(e)
+  }
 
   return false;
 };
@@ -60,14 +63,14 @@ export const debounce = (func: Function, timeout = 300) => {
 export const throttle = (func: Function, limit = 300) => {
   let lastFunc: any;
   let lastRan: any;
-  return function(...args: any) {
+  return function (...args: any) {
     const context = this;
     if (!lastRan) {
       func.apply(context, args);
       lastRan = Date.now();
     } else {
       clearTimeout(lastFunc);
-      lastFunc = setTimeout(function() {
+      lastFunc = setTimeout(function () {
         if (Date.now() - lastRan >= limit) {
           func.apply(context, args);
           lastRan = Date.now();

@@ -172,6 +172,7 @@ const start = (port) => {
 
                     let content: string = "";
                     let result: any;
+                    // console.log('before_build');
                     try {
                         result = await build({
                             // sourcemap: 'inline',
@@ -223,6 +224,7 @@ const start = (port) => {
                         console.warn(e);
                         throw { type: "esbuild", error: e };
                     }
+                    
 
                     result?.outputFiles?.forEach((x) => {
                         if (!fs.existsSync(path.dirname(x.path))) {
@@ -319,6 +321,20 @@ const start = (port) => {
                     }
                 });
             } catch (error) {
+                // Firefox error
+                if (String(error).includes('Dynamic module import is disabled or not supported in this context')) {
+                  postMessage({
+                    event: 'error',
+                    details: {
+                      type: 'Browser support',
+                      error: `This browser doesn’t support ESM in workers yet. Please switch to another browser like Chrome.`,
+                    },
+                  });
+                    
+                  console.warn(error.error ?? error);
+                  return;
+                }
+
                 // @ts-ignore
                 postMessage({
                     event: "error",
