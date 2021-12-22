@@ -4,8 +4,6 @@ import { h, Fragment } from 'preact';
 import { useRef, useCallback, useState, useEffect } from 'preact/hooks';
 import { Uri, editor as MonacoEditor } from 'monaco-editor';
 
-import type { Message } from "esbuild";
-
 import Editor from './Editor';
 import JS from './JS';
 import HTML from './HTML';
@@ -172,7 +170,7 @@ const name = "Component"
   warnFn = (details) => {
     let { type, message } = details;
     console.warn(`${type}\n${message}`);
-    console.warn(message)
+    // console.warn(message)
 
     if (typeof message == "string") {
       setErr(`${type}\n${message}`);
@@ -197,15 +195,8 @@ const name = "Component"
       return;
     } else if (Array.isArray(error) || Array.isArray(error?.errors)) {
       let errArr = "errors" in error ? error.errors : error;
-      errArr.forEach((err: Message) => { 
-        let { location, text } = err as Message;
-        console.error(
-          `${type}\n`,
-          location.file + "\n", 
-          location.lineText + "\n", 
-          `^`.padStart(location.column + 1 + location.length / 2, " ") + "\n",
-          `${text}`.padStart(location.column + 1 + ( text.length) / 2, " ")
-        );
+      errArr.forEach((err: string) => { 
+        console.error(err);
       });
 
       if (errArr.length > 0)
@@ -240,7 +231,7 @@ const name = "Component"
       event: "build",
       details: { current, ModuleWorkerSupported }
     });
-  }, 80);
+  }, 30);
 
   readyFn = () => {
     console.log("Ready");

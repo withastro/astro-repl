@@ -1,11 +1,8 @@
-import { initialize as EsbuildInitialize, build, transform as EsbuildTransform } from "esbuild-wasm/esm/browser";
+import { initialize as EsbuildInitialize, build, formatMessages, type PartialMessage } from "esbuild-wasm/esm/browser";
 import { EventEmitter } from "@okikio/emitter";
 
 import { getHighlighter, setCDN } from 'shiki';
 import { transform, initialize as AstroInitialize } from '@astrojs/compiler';
-
-import path from "path";
-import { vol, fs } from "memfs";
 
 // @ts-ignore
 import prettier from 'prettier/esm/standalone.mjs';
@@ -19,15 +16,13 @@ import parserCss from 'prettier/esm/parser-postcss.mjs';
 // @ts-ignore
 import parserBabel from 'prettier/esm/parser-babel.mjs';
 
-import { ALIAS } from "../plugins/alias";
 import { EXTERNAL } from "../plugins/external";
 import { ENTRY } from "../plugins/entry";
-import { JSON_PLUGIN } from "../plugins/json";
-import { BARE } from "../plugins/bare";
 import { HTTP } from "../plugins/http";
 import { CDN } from "../plugins/cdn";
+import { ALIAS } from "../plugins/alias";
 import { VIRTUAL_FS } from "../plugins/virtual-fs";
-import { WASM } from "../plugins/wasm";
+import { dirname, resolve } from '../../utils/loader';
 
 import { renderAstroToHTML } from "../../utils/astro";
 import { debounce } from "../../utils";
@@ -35,6 +30,13 @@ import { debounce } from "../../utils";
 import { encode, decode } from "../../utils/encode-decode";
 
 import type { Highlighter } from 'shiki';
+
+// Inspired by https://github.com/egoist/play-esbuild/blob/main/src/lib/esbuild.ts
+// I didn't even know this was exported by esbuild, great job @egoist
+export const createNotice = async (errors: PartialMessage[], kind: ("error" | "warning") & {} = "error") => {
+    let res = await formatMessages(errors, { kind });
+    return res.join("\n\n");
+}
 
 interface TimingObject {
     init?: number;
@@ -87,7 +89,6 @@ init();
 
 const start = (port) => {
     const BuildEvents = new EventEmitter();
-    vol.fromJSON({}, `/`);
 
     const postMessage = (obj: any) => {
         let messageStr = JSON.stringify(obj);
@@ -108,7 +109,7 @@ const start = (port) => {
                 event: "error",
                 details: {
                     type: `Error initializing, you may need to close and reopen all currently open pages pages`,
-                    error: err,
+                    error: Array.isArray(err) ? err : [err],
                 }
             });
         }
@@ -118,14 +119,45 @@ const start = (port) => {
     if (_initialized)
         initEvent.emit("init");
 
+    const FileSystem = new Map<string, Uint8Array>();
+    const getResolvedPath = (path: string, importer?: string) => {
+        let resolvedPath = path;
+        if (importer && path.startsWith('.'))
+            resolvedPath = resolve(dirname(importer), path);
+        if (FileSystem.has(resolvedPath)) return resolvedPath;
+
+        throw `File "${resolvedPath}" does not exist`;
+    }
+
+    const getFile = (path: string, type: 'string' | 'buffer' = "buffer", importer?: string) => {
+        let resolvedPath = getResolvedPath(path, importer);
+
+        if (FileSystem.has(resolvedPath)) {
+            let file = FileSystem.get(resolvedPath);
+            return type == "string" ? decode(file) : file;
+        }
+    }
+
+    const setFile = (path: string, content: Uint8Array | string, importer?: string) => {
+        let resolvedPath = path;
+        if (importer && path.startsWith('.'))
+            resolvedPath = resolve(dirname(importer), path);
+
+        try {
+            FileSystem.set(resolvedPath, content instanceof Uint8Array ? content : encode(content));
+        } catch (e) {
+            throw `Error occurred while writing to "${resolvedPath}"`;
+        }
+    }
+
     BuildEvents.on("delete", (details) => {
         let { filenames = [] } = details ?? {};
         for (let filename of filenames) {
-            if (fs.existsSync(filename)) {
+            if (FileSystem.has(filename)) {
                 try {
-                    fs.unlinkSync(filename);
+                    FileSystem.delete(filename);
                 } catch (e) {
-                    console.warn("File delete error: ", e)
+                    console.warn(`Error deleting "${filename}": `, e)
                 }
             }
         }
@@ -137,7 +169,7 @@ const start = (port) => {
                 event: "warn",
                 details: {
                     type: `Build worker not initialized`,
-                    message: `You need to wait for a little bit before trying to build astro files`
+                    message: [`You need to wait for a little bit before trying to bundle astro files`]
                 }
             });
 
@@ -158,8 +190,7 @@ const start = (port) => {
                     let filename: string = `${data.filename}`;
                     let input: string = `${data.value}`.trim(); // Ensure input is a string
 
-                    fs.mkdirpSync(path.dirname(filename));
-                    fs.writeFileSync(filename, input);
+                    setFile(filename, input);
                 }
 
                 /* Esbuild */
@@ -171,8 +202,8 @@ const start = (port) => {
                     if (input.length <= 0) continue;
 
                     let content: string = "";
-                    let result: any;
-                    // console.log('before_build');
+                    let result: Awaited<ReturnType<typeof build>>;
+                    // setFile
                     try {
                         result = await build({
                             // sourcemap: 'inline',
@@ -180,6 +211,7 @@ const start = (port) => {
                             bundle: true,
                             minify: true,
                             color: true,
+                            sourcemap: false,
                             treeShaking: true,
                             incremental: true,
                             target: ["esnext"],
@@ -204,45 +236,41 @@ const start = (port) => {
                                 ALIAS(),
                                 EXTERNAL(),
                                 ENTRY(filename),
-                                JSON_PLUGIN(),
-
-                                BARE(ModuleWorkerSupported),
+                                
                                 HTTP(ModuleWorkerSupported),
                                 CDN(ModuleWorkerSupported),
-                                VIRTUAL_FS({ filename, transform }, ModuleWorkerSupported),
-                                WASM(),
+                                VIRTUAL_FS({ filename, transform, getFile, getResolvedPath }, ModuleWorkerSupported),
                             ],
                             globalName: 'bundler',
                         });
                     } catch (e) {
-                        try {
-                            await EsbuildTransform("let x = 5;", { loader: "ts" });
-                        } catch (err) {
-                            await init();
-                        }
-
-                        console.warn(e);
-                        throw { type: "esbuild", error: e };
+                        console.log(e)
+                        if (e.errors) {
+                            throw { type: "esbuild", error: [await createNotice(e.errors, "error")] };
+                        } else throw e;
                     }
-                    
 
-                    result?.outputFiles?.forEach((x) => {
-                        if (!fs.existsSync(path.dirname(x.path))) {
-                            fs.mkdirSync(path.dirname(x.path));
-                        }
-
-                        fs.writeFileSync(x.path, x.text);
+                    result?.outputFiles?.forEach(({ path, text }) => {
+                        if (path == outfile) 
+                            // Remove unesscary space
+                            content = text?.trim?.();
                     });
 
                     if (result?.errors.length > 0)
-                        throw { type: "esbuild", error: result.errors };
+                        throw { type: "esbuild", error: [await createNotice(result.errors, "error")] };
 
-                    content = await fs.promises.readFile(outfile, "utf-8") as string;
-                    content = content?.trim?.(); // Remove unesscary space
+                    if (result?.warnings.length > 0)
+                        postMessage({
+                            event: "warn",
+                            details: {
+                                type: `esbuild warning`,
+                                message: [await createNotice(result.warnings, "warning")]
+                            }
+                        });
 
                     const output = await renderAstroToHTML(content, ModuleWorkerSupported);
                     if (typeof output === 'string')
-                        content = output;
+                        content = output?.trim?.();
                     else
                         throw { type: "astro-to-html", error: output.errors };
 
@@ -277,7 +305,7 @@ const start = (port) => {
                         });
                         timestamp(timing, 'format');
 
-                        content = highlighter.codeToHtml(content, 'ts');
+                        content = highlighter.codeToHtml(content, { lang: 'ts' });
                         timestamp(timing, 'highlight');
 
                         timestamp(timing, 'total');
@@ -302,7 +330,7 @@ const start = (port) => {
                         });
                         timestamp(timing, 'format');
 
-                        content = highlighter.codeToHtml(content, 'html');
+                        content = highlighter.codeToHtml(content, { lang: 'html' });
                         timestamp(timing, 'highlight');
 
                         timestamp(timing, 'total');
@@ -327,7 +355,7 @@ const start = (port) => {
                     event: 'error',
                     details: {
                       type: 'Browser support',
-                      error: `This browser doesn’t support ESM in workers yet. Please switch to another browser like Chrome.`,
+                      error: `This browser doesn't support ESM in workers yet. Please switch to another browser like Chrome.`,
                     },
                   });
                     
@@ -347,7 +375,7 @@ const start = (port) => {
                 console.warn(error.error ?? error);
             }
         })();
-    }, 50));
+    }, 250));
 
     port.onmessage = ({ data }) => {
         let { event, details } = JSON.parse(decode(data));

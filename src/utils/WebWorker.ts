@@ -12,10 +12,10 @@ const BuildWorkerOptions = {
  } as WorkerOptions;
  
  console.log(`This browser only supports ${ModuleWorkerSupported ? "module" : "classic"} workers!`);
- console.log(`This browser uses ${SharedWorkerSupported ? "Shared Web Workers" : "Normal Web Workers"}!`);
+ console.log(`This browser supports ${SharedWorkerSupported ? "Shared Web Workers" : "Normal Web Workers"}!`);
 
-export const BuildWorker = new WebWorker(BUILD_WORKER_URL, BuildWorkerOptions);
-BuildWorker.start();
+export const BuildWorker = new WebWorker(BUILD_WORKER_URL, BuildWorkerOptions); 
+BuildWorker?.start?.();
 
 export { WebWorker };
 export default WebWorker;

@@ -9,18 +9,18 @@ export const WEB_WORKER = () => {
    * @type {import('esbuild').Plugin}
    */
   return {
-    name: 'web-worker',
+    name: 'worker',
     setup(build) {
       build.onResolve({ filter: /^worker\:/ }, (args) => {
         // Feel free to remove this logline once you verify that the plugin works for your setup
         console.debug(`The web worker plugin matched an import to ${args.path} from ${args.importer}`);
         return {
           path: args.path.replace(/^worker\:/, ''),
-          namespace: 'web-worker',
+          namespace: 'worker',
           pluginData: { importer: args.importer },
         };
       });
-      build.onLoad({ filter: /.*/, namespace: 'web-worker' }, async (args) => {
+      build.onLoad({ filter: /.*/, namespace: 'worker' }, async (args) => {
         const {
           path: importPath,
           pluginData: { importer },
@@ -38,7 +38,6 @@ export const WEB_WORKER = () => {
         const outFileWithRelativePath = join('dist', 'play', 'workers', outFileName);
 
         try {
-          const __dirname = path.resolve();
           await esbuild.build({
             target: ['es2018'],
 
@@ -57,7 +56,6 @@ export const WEB_WORKER = () => {
             define: {
               global: 'globalThis',
             },
-            inject: ['./scripts/shims/node.js'],
           });
 
           return {

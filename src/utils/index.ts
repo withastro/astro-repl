@@ -1,5 +1,7 @@
 export * from './astro';
 
+import { b64EncodeUnicode } from "./b64";
+
 // https://stackoverflow.com/questions/62954570/javascript-feature-detect-module-support-for-web-workers
 export const ModuleWorkerTest = () => {
   let support = false;
@@ -19,8 +21,9 @@ export const ModuleWorkerTest = () => {
     // checking for the type of the script is done before trying to load it.
     // @ts-ignore
     // data:application/javascript;base64,${Buffer.from("export {};").toString('base64')}
-    // const worker = new Worker(`blob://`, test);
-    const worker = new Worker(`data:application/javascript;base64,${Buffer.from("export {};").toString('base64')}`, test);
+    // const worker = new Worker(`blob://`, test); 
+    // .toString('base64')
+    const worker = new Worker(`data:application/javascript;base64,${b64EncodeUnicode("export {};")}`, test);
     worker.terminate();
     return support;
   } catch (e) {

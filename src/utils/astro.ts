@@ -1,5 +1,7 @@
 import { renderPage } from '../@astro/internal/index';
 
+import { b64EncodeUnicode } from "./b64";
+
 export async function renderAstroToHTML(content: string, ModuleWorkerSupported: boolean): Promise<string | { errors: string[] }> {
   let mod;
   let html;
@@ -7,7 +9,7 @@ export async function renderAstroToHTML(content: string, ModuleWorkerSupported: 
   var bundler;
   try {
       if (ModuleWorkerSupported) {
-          const url = `data:application/javascript;base64,${Buffer.from(content).toString('base64')}`;
+          const url = `data:application/javascript;base64,${b64EncodeUnicode(content)}`;
           ({ default: mod } = await import(url));
       } else {
           ({ default: mod } = new Function(`${content} return bundler;`)());

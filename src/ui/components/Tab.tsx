@@ -1,7 +1,8 @@
 import type { editor as Editor } from 'monaco-editor';
 import type { FunctionalComponent } from 'preact';
 import { h } from 'preact';
-import path from 'path';
+import { basename } from '../../utils/loader';
+// import { posix } from 'path';
 
 const noop = () => {};
 
@@ -13,7 +14,7 @@ export interface Props {
   onSetTab?: (model: Editor.IModel) => void;
 }
 const Tab: FunctionalComponent<Props> = ({ 'aria-selected': active = false, index, onRemoveTab = noop, onSetTab = noop, model }) => {
-  const tabName = path.posix.basename(model.uri.path);
+  const tabName = basename(model.uri.path);
   return (
     <div class={`ap-tabgroup-tabwrapper${index !== 0 ? ' is-removable' : ''}`}>
       <button role="tab" type="button" aria-selected={active} aria-controls="editor" class="ap-tabgroup-tab" onClick={() => onSetTab(model)}>

@@ -42,3 +42,10 @@ export function b64Decode(str: string) {
     }
     return deserializeData(value);
 }
+
+// Based on https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem
+export function b64EncodeUnicode(str: string) {
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode(('0x' + p1) as unknown as number);
+    }));
+}

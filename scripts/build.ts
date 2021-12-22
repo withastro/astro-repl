@@ -1,10 +1,10 @@
-import esbuild from 'esbuild';
+import * as Esbuild from 'esbuild';
 import path from 'path';
 import fastGlob from 'fast-glob';
 import { WEB_WORKER } from './plugins/worker';
 import { rm, mkdir, copyFile } from 'fs/promises';
 
-const ESBUILD_OPTS: esbuild.BuildOptions = {
+const ESBUILD_OPTS: Esbuild.BuildOptions = {
   target: ['es2018'],
   platform: 'browser',
   outdir: 'dist/play',
@@ -26,8 +26,6 @@ const ESBUILD_OPTS: esbuild.BuildOptions = {
     '.ttf': 'file',
     '.wasm': 'file',
   },
-
-  inject: ['./scripts/shims/node.js'],
 
   plugins: [WEB_WORKER()],
 };
@@ -60,13 +58,13 @@ async function build() {
   const entryPoints = await fastGlob([`src/index.ts`, `src/editor/*.ts`, `src/@astro/*.ts`, `!src/editor/**/*.d.ts`], { absolute: true });
 
   entryPoints.push(path.resolve(`node_modules/esbuild-wasm/esbuild.wasm`));
-  await esbuild.build({
+  await Esbuild.build({
     ...ESBUILD_OPTS,
     entryPoints,
     watch: isWatch,
   });
 
-  await esbuild.build({
+  await Esbuild.build({
     ...ESBUILD_OPTS,
     entryPoints: ['src/@astro/internal/index.ts'],
     outdir: undefined,
