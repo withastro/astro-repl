@@ -66,6 +66,5 @@ interface ModuleInfo {
   }
   
   export function createMetadata(fileURL: string, options: CreateMetadataOptions) {
-    //  ?? globalThis.location.href
-    return new Metadata(fileURL, options.modules, options.hydratedComponents);
+    return new Metadata(fileURL ?? globalThis.location.href, options.modules, options.hydratedComponents);
   }

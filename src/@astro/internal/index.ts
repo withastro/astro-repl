@@ -5,8 +5,8 @@ export { createMetadata } from './metadata';
 
 type SSRResult = any;
 type SSRElement = any;
-type AstroComponentMetadata = any; 
-type Renderer = any; 
+type AstroComponentMetadata = any;
+type Renderer = any;
 type TopLevelAstro = any;
 
 const { generate, GENERATOR } = astring;
@@ -164,19 +164,19 @@ async function generateHydrateScript(scriptOptions: HydrateScriptOptions, metada
 
   hydrationSource += renderer.source
     ? `const [{ ${componentExport.value}: Component }, { default: hydrate }] = await Promise.all([import("${componentUrl}"), import("${renderer.source}")]);
-  return (el, children) => hydrate(el)(Component, ${serialize(props)}, children);
-`
+    return (el, children) => hydrate(el)(Component, ${serialize(props)}, children);
+  `
     : `await import("${componentUrl}");
-  return () => {};
-`;
+    return () => {};
+  `;
 
   const hydrationScript = {
     props: { type: 'module' },
     children: `import setup from 'astro/client/${hydrate}.js';
-setup("${astroId}", {${metadata.hydrateArgs ? `value: ${JSON.stringify(metadata.hydrateArgs)}` : ''}}, async () => {
-  ${hydrationSource}
-});
-`,
+  setup("${astroId}", {${metadata.hydrateArgs ? `value: ${JSON.stringify(metadata.hydrateArgs)}` : ''}}, async () => {
+    ${hydrationSource}
+  });
+  `,
   };
 
   return hydrationScript;
@@ -192,7 +192,7 @@ export async function renderSlot(result: any, slotted: string, fallback?: any) {
 export async function renderComponent(result: SSRResult, displayName: string, Component: unknown, _props: Record<string | number, any>, slots: any = {}) {
   Component = await Component;
   const children = await renderSlot(result, slots?.default);
-  
+
   // No renderers for the repl
   // const { renderers } = result._metadata;
   const renderers = [];
@@ -280,7 +280,7 @@ function createFetchContentFn(url: URL) {
 }
 
 export function createAstro(fileURLStr: string, site: string): TopLevelAstro {
-  const url = new URL(fileURLStr); //  as unknown as URL).href : fileURLStr) ?? globalThis.location.href
+  const url = new URL(fileURLStr ?? globalThis.location.href);
   const fetchContent = createFetchContentFn(url) as unknown as TopLevelAstro['fetchContent'];
   return {
     // TODO I think this is no longer needed.

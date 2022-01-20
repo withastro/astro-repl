@@ -1,18 +1,26 @@
 import { renderPage } from '../@astro/internal/index';
 
-export async function renderAstroToHTML(content: string): Promise<string | { errors: string[] }> {
-  const url = `data:application/javascript;base64,${Buffer.from(content).toString('base64')}`;
+import { b64EncodeUnicode } from "./b64";
+
+export async function renderAstroToHTML(content: string, ModuleWorkerSupported: boolean): Promise<string | { errors: string[] }> {
   let mod;
   let html;
+
+  var bundler;
   try {
-    ({ default: mod } = await import(url));
+      if (ModuleWorkerSupported) {
+          const url = `data:application/javascript;base64,${b64EncodeUnicode(content)}`;
+          ({ default: mod } = await import(url));
+      } else {
+          ({ default: mod } = new Function(`${content} return bundler;`)());
+      }
   } catch (e) {
-    return {
-      errors: [e],
-    };
+      return {
+          errors: e
+      }
   }
   if (!mod) {
-    return;
+      return;
   }
 
   try {
@@ -36,13 +44,10 @@ export async function renderAstroToHTML(content: string): Promise<string | { err
           };
         },
       },
-      await mod,
-      {},
-      {}
-    );
+      await mod, {}, {});
   } catch (e) {
     return {
-      errors: [e],
+      errors: e // [e],
     };
   }
   return html;
