@@ -1,6 +1,12 @@
-import { renderPage } from '../@astro/internal/index';
-
+import type { SSRElement } from 'astro';
+import { renderPage, createResult, CreateResultArgs } from '../@astro/internal/index';
 import { b64EncodeUnicode } from "./b64";
+
+function pathJoin(parts, sep){
+  var separator = sep || '/';
+  var replace   = new RegExp(separator+'{1,}', 'g');
+  return parts.join(separator).replace(replace, separator);
+}
 
 export async function renderAstroToHTML(content: string, ModuleWorkerSupported: boolean): Promise<string | { errors: string[] }> {
   let mod;
@@ -9,6 +15,7 @@ export async function renderAstroToHTML(content: string, ModuleWorkerSupported: 
   var bundler;
   try {
       if (ModuleWorkerSupported) {
+        console.log(content)
           const url = `data:application/javascript;base64,${b64EncodeUnicode(content)}`;
           ({ default: mod } = await import(url));
       } else {
@@ -24,27 +31,16 @@ export async function renderAstroToHTML(content: string, ModuleWorkerSupported: 
   }
 
   try {
-    html = await renderPage(
-      {
-        styles: new Set(),
-        scripts: new Set(),
-        /** This function returns the `Astro` faux-global */
-        createAstro(astroGlobal: any, props: Record<string, any>, slots: Record<string, any> | null) {
-          const url = new URL('http://localhost:3000/');
-          const canonicalURL = url;
-          return {
-            __proto__: astroGlobal,
-            props,
-            request: {
-              canonicalURL,
-              params: {},
-              url,
-            },
-            slots: Object.fromEntries(Object.entries(slots || {}).map(([slotName]) => [slotName, true])),
-          };
-        },
+    const localHost = new URL('http://localhost/');
+		const result = createResult({ 
+      astroConfig: { 
+        buildOptions: {} 
       },
-      await mod, {}, {});
+      origin: globalThis.location.origin,
+      params: {}
+    } as unknown as CreateResultArgs);
+
+		html = await renderPage(result, await mod, {}, null);
   } catch (e) {
     return {
       errors: e // [e],
