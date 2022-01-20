@@ -22,11 +22,11 @@ export const CDN = (ModuleWorkerSupported: boolean): Plugin => {
 
         if (isBareImport(args.path)) {
           let { host, argPath } = getCDNHost(args.path);
-
-          if (ModuleWorkerSupported && inferLoader(argPath) == "js" && extname(argPath) != ".cjs") {
+          
+          if (ModuleWorkerSupported && /js|ts/.test(inferLoader(argPath)) && !/\.c(js|ts)/.test(extname(argPath))) {
             return {
               namespace: EXTERNALS_NAMESPACE,
-              path: argPath,
+              path: new URL(argPath, host).href,
               external: true,
               pluginData: {
                 parentUrl: host,
