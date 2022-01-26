@@ -48,18 +48,17 @@ export const VIRTUAL_FS = ({ filename, transform, getResolvedPath, getFile }: fi
                 if (extname(realPath) === '.astro') {
                     let tsContent = '';
 
-                    console.log(realPath)
                     try {
                         tsContent = await transform(decode(content), {
                             internalURL: '/play/@astro/internal.min.js',
                             sourcemap: false,
-                            sourcefile: '/#' + filename
+                            sourcefile: filename,
+                            pathname: filename
                         }).then(res => res.code);
                     } catch (e) {
                         throw `Astro transform error - "${resolvedPath}" couldn't be transformed by the Astro compiler`;
                     }
 
-                    console.log(realPath + " --- " + resolvedPath)
                     return {
                         contents: encode(tsContent),
                         pluginData: {

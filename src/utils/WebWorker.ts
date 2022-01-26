@@ -9,10 +9,10 @@ export const WorkerEvents = new EventEmitter();
 const BuildWorkerOptions = { 
     name: 'build-worker',
     type: ModuleWorkerSupported ? "module"  : "classic" 
- } as WorkerOptions;
- 
- console.log(`This browser only supports ${ModuleWorkerSupported ? "module" : "classic"} workers!`);
- console.log(`This browser supports ${SharedWorkerSupported ? "Shared Web Workers" : "Normal Web Workers"}!`);
+} as WorkerOptions;
+
+console.log(`This browser supports ${ModuleWorkerSupported ? "module" : "classic"} workers!`);
+console.log(`This browser ${SharedWorkerSupported ? "supports Shared Web Workers" : "only supports Web Workers"}!`);
 
 export const BuildWorker = new WebWorker(BUILD_WORKER_URL, BuildWorkerOptions); 
 BuildWorker?.start?.();

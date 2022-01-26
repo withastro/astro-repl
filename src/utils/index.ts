@@ -11,8 +11,8 @@ export const ModuleWorkerTest = () => {
       return "module";
     }
   }
-  try {
 
+  try {
     // We use "blob://" as url to avoid an useless network request.
     // This will either throw in Chrome
     // either fire an error event in Firefox

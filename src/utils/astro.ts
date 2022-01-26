@@ -1,5 +1,4 @@
-import { renderPage } from '../@astro/internal/index';
-
+import { renderPage, createResult, CreateResultArgs } from '../@astro/internal/index';
 import { b64EncodeUnicode } from "./b64";
 
 export async function renderAstroToHTML(content: string, ModuleWorkerSupported: boolean): Promise<string | { errors: string[] }> {
@@ -7,6 +6,12 @@ export async function renderAstroToHTML(content: string, ModuleWorkerSupported: 
   let html;
 
   var bundler;
+  const slots = new Proxy({}, {
+    get(target, prop, receiver) {
+      return () => null
+    }
+  })
+
   try {
       if (ModuleWorkerSupported) {
           const url = `data:application/javascript;base64,${b64EncodeUnicode(content)}`;
@@ -24,27 +29,15 @@ export async function renderAstroToHTML(content: string, ModuleWorkerSupported: 
   }
 
   try {
-    html = await renderPage(
-      {
-        styles: new Set(),
-        scripts: new Set(),
-        /** This function returns the `Astro` faux-global */
-        createAstro(astroGlobal: any, props: Record<string, any>, slots: Record<string, any> | null) {
-          const url = new URL('http://localhost:3000/');
-          const canonicalURL = url;
-          return {
-            __proto__: astroGlobal,
-            props,
-            request: {
-              canonicalURL,
-              params: {},
-              url,
-            },
-            slots: Object.fromEntries(Object.entries(slots || {}).map(([slotName]) => [slotName, true])),
-          };
-        },
+		const result = createResult({ 
+      astroConfig: { 
+        buildOptions: {} 
       },
-      await mod, {}, {});
+      origin: globalThis.location.origin,
+      params: {}
+    } as unknown as CreateResultArgs);
+
+    html = await renderPage(result, await mod, {}, slots);
   } catch (e) {
     return {
       errors: e // [e],
