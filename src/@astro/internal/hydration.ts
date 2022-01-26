@@ -1,4 +1,3 @@
-
 import { valueToEstree } from 'estree-util-value-to-estree';
 import * as astring from 'astring';
 import { hydrationSpecifier, serializeListValue } from './util';

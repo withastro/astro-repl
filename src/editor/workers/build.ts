@@ -25,9 +25,8 @@ import { VIRTUAL_FS } from "../plugins/virtual-fs";
 import { dirname, resolve } from '../../utils/loader';
 
 import { renderAstroToHTML } from "../../utils/astro";
-import { debounce } from "../../utils";
-
 import { encode, decode } from "../../utils/encode-decode";
+import { debounce } from "../../utils";
 
 import type { Highlighter } from 'shiki';
 
@@ -247,7 +246,7 @@ const start = (port) => {
                         console.log(e)
                         if (e.errors) {
                             throw { type: "esbuild", error: [await createNotice(e.errors, "error")] };
-                        } else throw e;
+                        } else throw { type: "esbuild", error: [(e?.message ?? e).toString()] };
                     }
 
                     result?.outputFiles?.forEach(({ path, text }) => {
@@ -336,7 +335,7 @@ const start = (port) => {
                         timestamp(timing, 'total');
                         shiki = { input, content, timing };
                     } catch (e) {
-                        throw { type: "shiki", error: e };
+                        throw { type: "shiki", error: [(e?.message ?? e).toString()] };
                     }
                 }
 
@@ -368,11 +367,11 @@ const start = (port) => {
                     event: "error",
                     details: {
                         type: `${error?.type ?? "Build"} error`,
-                        error: error.error ?? error
+                        error: (Array.isArray(error.error) ? error.error.join("\n") : error.error.toString()) ?? error?.message ?? error
                     }
                 });
-
-                console.warn(error.error ?? error);
+                
+                console.warn(error?.error ?? error)
             }
         })();
     }, 250));

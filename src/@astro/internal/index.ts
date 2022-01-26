@@ -1,11 +1,9 @@
-// import { valueToEstree } from 'estree-util-value-to-estree';
-// import * as astring from 'astring';
-// import shorthash from 'shorthash';
-// export { createMetadata } from './metadata';
-
 import shorthash from 'shorthash';
 import { extractDirectives, generateHydrateScript } from './hydration';
 import { serializeListValue } from './util';
+
+import { extname } from '../../utils/loader';
+
 export { createMetadata } from './metadata';
 export type { Metadata } from './metadata';
 
@@ -445,11 +443,6 @@ function renderElement(name: string, { props: _props, children = '' }: SSRElemen
 	}
 	return `<${name}${spreadAttributes(props)}>${children}</${name}>`;
 }
-// -- NEW END --
-
-
-
-import { extname } from '../../utils/loader';
 
 // https://vitejs.dev/guide/features.html#css-pre-processors
 export const STYLE_EXTENSIONS = new Set(['.css', '.pcss', '.postcss', '.scss', '.sass', '.styl', '.stylus', '.less']);
@@ -491,7 +484,6 @@ export function createResult(args: CreateResultArgs): SSRResult {
 		links: new Set<SSRElement>(),
 		/** This function returns the `Astro` faux-global */
 		createAstro(astroGlobal: AstroGlobalPartial, props: Record<string, any>, slots: Record<string, any> | null) {
-			console.log(slots)
 			const site = new URL(origin);
 			const url = new URL('.' + pathname, site);
 			const canonicalURL = getCanonicalURL('.' + pathname, astroConfig.buildOptions.site || origin);
