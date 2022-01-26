@@ -121,3 +121,6 @@ dist
 
 # Local Netlify folder
 .netlify
+
+# Custom files
+/public/shiki

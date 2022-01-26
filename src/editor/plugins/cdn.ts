@@ -1,82 +1,71 @@
 // Based on https://github.com/okikio/bundle/blob/main/src/ts/plugins/cdn.ts
-import { extname } from 'path';
-import { fetchPkg } from './http';
-
 import type { Plugin } from 'esbuild';
-import type { OnLoadArgs, OnLoadResult } from 'esbuild-wasm';
 
-export const CDN_NAMESPACE = 'cdn';
-export const CDN = (): Plugin => {
+import { fetchPkg } from './http';
+import { EXTERNALS_NAMESPACE } from './external';
+import { inferLoader, isBareImport, getCDNHost, extname } from '../../utils/loader';
+
+export const CDN_NAMESPACE = 'cdn-url';
+export const CDN = (ModuleWorkerSupported: boolean): Plugin => {
   return {
     name: CDN_NAMESPACE,
     setup(build) {
-      build.onResolve({ namespace: CDN_NAMESPACE, filter: /.*/ }, async (args: OnLoadArgs) => {
-        let pathUrl = new URL(args.path, args.pluginData.parentUrl).toString();
-        pathUrl = pathUrl.replace(/\/$/, '/index'); // Some packages use "../../" which this is supposed to fix
-
-        let parentFileExt = extname(args.pluginData.parentUrl).replace(/^./, '');
-        let fileExt = extname(pathUrl).replace(/^./, '');
-
-        let parentPathIsTS = fileExt == '' && /tsx?|jsx/.test(parentFileExt);
-        if (parentPathIsTS) {
-          pathUrl += `.` + parentFileExt;
+      // Resolve bare imports to the CDN required using different URL schemes
+      build.onResolve({ filter: /.*/ }, (args) => {
+        if (/^\@\//.test(args.path)) {
+          return {
+            namespace: EXTERNALS_NAMESPACE,
+            path: args.path,
+            external: true
+          };
         }
-        let pathIsTS = /tsx?|jsx/.test(fileExt);
 
-        let loader = undefined;
-        switch (fileExt) {
-          case 'js':
+        if (isBareImport(args.path)) {
+          let { host, argPath } = getCDNHost(args.path);
+          
+          if (ModuleWorkerSupported && /js|ts/.test(inferLoader(argPath)) && !/\.c(js|ts)/.test(extname(argPath))) {
             return {
-              namespace: 'external',
-              path: pathUrl,
+              namespace: EXTERNALS_NAMESPACE,
+              path: new URL(argPath, host).href,
               external: true,
+              pluginData: {
+                parentUrl: host,
+              },
             };
-          case 'ts':
-            loader = 'ts';
-            break;
+          }
 
-          case 'jsx':
-          case 'tsx':
-            loader = 'tsx';
-            break;
-
-          case 'css':
-          case 'scss':
-            loader = 'css';
-            break;
-
-          case 'png':
-          case 'jpeg':
-          case 'ttf':
-            loader = 'file';
-            break;
-
-          case 'svg':
-          case 'html':
-          case 'txt':
-            loader = 'text';
-            break;
+          return {
+            namespace: CDN_NAMESPACE,
+            path: argPath,
+            pluginData: {
+              parentUrl: host,
+            },
+          };
         }
+      });
 
-        loader = pathIsTS || parentPathIsTS ? 'ts' : loader;
-
+      // Pass on the info from the bare import
+      build.onResolve({ namespace: CDN_NAMESPACE, filter: /.*/ }, async (args) => {
         return {
-          namespace: CDN_NAMESPACE,
           path: args.path,
-          pluginData: { ...args.pluginData, loader, pathUrl },
+          namespace: CDN_NAMESPACE,
+          pluginData: args.pluginData,
         };
       });
 
-      build.onLoad({ namespace: CDN_NAMESPACE, filter: /.*/ }, async (args: OnLoadArgs) => {
-        const { pathUrl, loader } = args.pluginData;
+      // On load 
+      build.onLoad({ namespace: CDN_NAMESPACE, filter: /.*/ }, async (args) => {
+        let pathUrl = new URL(args.path, args.pluginData.parentUrl).toString();
+        pathUrl = pathUrl.replace(/\/$/, "/index"); // Some packages use "../../" which this is supposed to fix
+
         const { content, url } = await fetchPkg(pathUrl);
         return Object.assign({
           contents: content,
           pluginData: {
             parentUrl: url,
           },
-          loader: loader,
-        }) as OnLoadResult;
+          loader: inferLoader(pathUrl)
+        });
       });
     },
   };

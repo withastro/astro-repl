@@ -1,5 +1,6 @@
 import type { editor as Editor } from 'monaco-editor';
-import path from 'path';
+// import path from 'path';
+import { basename as pathBasename} from '../../utils/loader';
 import type { RefObject } from 'preact';
 import { editor, Range, Position, Uri } from 'monaco-editor';
 const { createModel } = editor;
@@ -56,7 +57,7 @@ const useMonaco = (Monaco: typeof import('../../editor/modules/monaco'), editorR
       return;
     }
     const model = createModel(...args);
-    const basename = path.posix.basename(args[2].path, '.astro');
+    const basename = pathBasename(args[2].path, '.astro');
     setModels((models) => {
       return [...models, model];
     });

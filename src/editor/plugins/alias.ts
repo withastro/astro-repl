@@ -1,9 +1,10 @@
 import type { Plugin } from 'esbuild';
 import { VIRTUAL_FS_NAMESPACE } from './virtual-fs';
 
+export const ALIAS_NAMESPACE = "alias-import"
 export const ALIAS = (): Plugin => {
     return {
-        name: "ALIAS",
+        name: ALIAS_NAMESPACE,
         setup(build) {
             build.onResolve({ filter: /\@\/.*/ }, (args) => {
                 return {

@@ -1,11 +1,8 @@
-import { initialize as EsbuildInitialize, build } from "esbuild-wasm/esm/browser";
+import { initialize as EsbuildInitialize, build, formatMessages, type PartialMessage } from "esbuild-wasm/esm/browser";
 import { EventEmitter } from "@okikio/emitter";
 
 import { getHighlighter, setCDN } from 'shiki';
 import { transform, initialize as AstroInitialize } from '@astrojs/compiler';
-
-import path from "path";
-import { fs, vol } from "memfs";
 
 // @ts-ignore
 import prettier from 'prettier/esm/standalone.mjs';
@@ -19,15 +16,13 @@ import parserCss from 'prettier/esm/parser-postcss.mjs';
 // @ts-ignore
 import parserBabel from 'prettier/esm/parser-babel.mjs';
 
-import { ALIAS } from "../plugins/alias";
 import { EXTERNAL } from "../plugins/external";
 import { ENTRY } from "../plugins/entry";
-import { JSON_PLUGIN } from "../plugins/json";
-import { BARE } from "../plugins/bare";
 import { HTTP } from "../plugins/http";
 import { CDN } from "../plugins/cdn";
+import { ALIAS } from "../plugins/alias";
 import { VIRTUAL_FS } from "../plugins/virtual-fs";
-import { WASM } from "../plugins/wasm";
+import { dirname, resolve } from '../../utils/loader';
 
 import { renderAstroToHTML } from "../../utils/astro";
 import { debounce } from "../../utils";
@@ -35,6 +30,13 @@ import { debounce } from "../../utils";
 import { encode, decode } from "../../utils/encode-decode";
 
 import type { Highlighter } from 'shiki';
+
+// Inspired by https://github.com/egoist/play-esbuild/blob/main/src/lib/esbuild.ts
+// I didn't even know this was exported by esbuild, great job @egoist
+export const createNotice = async (errors: PartialMessage[], kind: ("error" | "warning") & {} = "error") => {
+    let res = await formatMessages(errors, { kind });
+    return res.join("\n\n");
+}
 
 interface TimingObject {
     init?: number;
@@ -59,8 +61,9 @@ let _initialized = false;
 
 const initEvent = new EventEmitter();
 
-(async () => {
+let init = async () => {
     try {
+        _initialized = false;
         if (!_initialized) {
             await EsbuildInitialize({
                 worker: false,
@@ -74,24 +77,25 @@ const initEvent = new EventEmitter();
             setCDN('https://unpkg.com/shiki/');
             highlighter = await getHighlighter({ theme: 'github-dark', langs: ['html', 'ts'] });
 
-            _initialized = true;    
-            initEvent.emit("init");    
+            _initialized = true;
+            initEvent.emit("init");
         }
-    } catch (error) { 
-        initEvent.emit("error", error);    
+    } catch (error) {
+        initEvent.emit("error", error);
     }
-})();
+};
+
+init();
 
 const start = (port) => {
     const BuildEvents = new EventEmitter();
-    vol.fromJSON({}, `/`);  
 
     const postMessage = (obj: any) => {
         let messageStr = JSON.stringify(obj);
         let encodedMessage = encode(messageStr);
-        port.postMessage(encodedMessage , [encodedMessage.buffer]); 
-    };         
-    
+        port.postMessage(encodedMessage, [encodedMessage.buffer]);
+    };
+
     initEvent.on({
         // When the SharedWorker first loads, tell the page that esbuild has initialized  
         init() {
@@ -100,34 +104,79 @@ const start = (port) => {
                 details: {}
             });
         },
-        error(err) {         
+        error(err) {
             postMessage({
                 event: "error",
                 details: {
                     type: `Error initializing, you may need to close and reopen all currently open pages pages`,
-                    error: err,
+                    error: Array.isArray(err) ? err : [err],
                 }
             });
         }
     });
 
     // If another page loads while SharedWorker is still active, tell that page that esbuild is initialized
-    if (_initialized) 
+    if (_initialized)
         initEvent.emit("init");
-        
+
+    const FileSystem = new Map<string, Uint8Array>();
+    const getResolvedPath = (path: string, importer?: string) => {
+        let resolvedPath = path;
+        if (importer && path.startsWith('.'))
+            resolvedPath = resolve(dirname(importer), path);
+        if (FileSystem.has(resolvedPath)) return resolvedPath;
+
+        throw `File "${resolvedPath}" does not exist`;
+    }
+
+    const getFile = (path: string, type: 'string' | 'buffer' = "buffer", importer?: string) => {
+        let resolvedPath = getResolvedPath(path, importer);
+
+        if (FileSystem.has(resolvedPath)) {
+            let file = FileSystem.get(resolvedPath);
+            return type == "string" ? decode(file) : file;
+        }
+    }
+
+    const setFile = (path: string, content: Uint8Array | string, importer?: string) => {
+        let resolvedPath = path;
+        if (importer && path.startsWith('.'))
+            resolvedPath = resolve(dirname(importer), path);
+
+        try {
+            FileSystem.set(resolvedPath, content instanceof Uint8Array ? content : encode(content));
+        } catch (e) {
+            throw `Error occurred while writing to "${resolvedPath}"`;
+        }
+    }
+
+    BuildEvents.on("delete", (details) => {
+        let { filenames = [] } = details ?? {};
+        for (let filename of filenames) {
+            if (FileSystem.has(filename)) {
+                try {
+                    FileSystem.delete(filename);
+                } catch (e) {
+                    console.warn(`Error deleting "${filename}": `, e)
+                }
+            }
+        }
+    });
+
     BuildEvents.on("build", debounce((details) => {
         if (!_initialized) {
             postMessage({
                 event: "warn",
                 details: {
                     type: `Build worker not initialized`,
-                    message: `You need to wait for a little bit before trying to build astro files`
+                    message: [`You need to wait for a little bit before trying to bundle astro files`]
                 }
             });
 
             return;
         }
 
+        const { ModuleWorkerSupported } = details;
         let { models = [], current } = details ?? {};
         let files = [];
         let html, js, shiki;
@@ -135,14 +184,13 @@ const start = (port) => {
         if (models.length <= 0 && current) models = [current];
 
         (async () => {
-            try { 
+            try {
                 // Preload all components and files to avoid esbuild building while still missing files
                 for (let data of models) {
                     let filename: string = `${data.filename}`;
                     let input: string = `${data.value}`.trim(); // Ensure input is a string
 
-                    fs.mkdirpSync(path.dirname(filename));
-                    fs.writeFileSync(filename, input);
+                    setFile(filename, input);
                 }
 
                 /* Esbuild */
@@ -154,66 +202,77 @@ const start = (port) => {
                     if (input.length <= 0) continue;
 
                     let content: string = "";
-                    let result = await build({
-                        // sourcemap: 'inline',
-                        entryPoints: ['<stdin>'],
-                        bundle: true,
-                        minify: true,
-                        color: true,
-                        treeShaking: true,
-                        incremental: true,
-                        target: ["esnext"],
-                        logLevel: 'silent',
-                        write: false,
-                        outfile,
-                        platform: "browser",
-                        format: "esm",
-                        loader: {
-                            '.png': 'file',
-                            '.jpeg': 'file',
-                            '.ttf': 'file',
-                            '.svg': 'text',
-                            '.html': 'text',
-                            '.scss': 'css'
-                        },
-                        define: {
-                            "__NODE__": `false`,
-                            "process.env.NODE_ENV": `"production"`
-                        },
-                        plugins: [
-                            ALIAS(),
-                            EXTERNAL(),
-                            ENTRY(filename),
-                            JSON_PLUGIN(),
+                    let result: Awaited<ReturnType<typeof build>>;
+                    // setFile
+                    try {
+                        result = await build({
+                            // sourcemap: 'inline',
+                            entryPoints: ['<stdin>'],
+                            bundle: true,
+                            minify: true,
+                            color: true,
+                            sourcemap: false,
+                            treeShaking: true,
+                            incremental: true,
+                            target: ["esnext"],
+                            logLevel: 'silent',
+                            write: false,
+                            outfile,
+                            platform: "browser",
+                            format: ModuleWorkerSupported ? "esm" : "iife",
+                            loader: {
+                                '.png': 'file',
+                                '.jpeg': 'file',
+                                '.ttf': 'file',
+                                '.svg': 'text',
+                                '.html': 'text',
+                                '.scss': 'css'
+                            },
+                            define: {
+                                "__NODE__": `false`,
+                                "process.env.NODE_ENV": `"production"`
+                            },
+                            plugins: [
+                                ALIAS(),
+                                EXTERNAL(),
+                                ENTRY(filename),
+                                
+                                HTTP(ModuleWorkerSupported),
+                                CDN(ModuleWorkerSupported),
+                                VIRTUAL_FS({ filename, transform, getFile, getResolvedPath }, ModuleWorkerSupported),
+                            ],
+                            globalName: 'bundler',
+                        });
+                    } catch (e) {
+                        console.log(e)
+                        if (e.errors) {
+                            throw { type: "esbuild", error: [await createNotice(e.errors, "error")] };
+                        } else throw e;
+                    }
 
-                            BARE(),
-                            HTTP(),
-                            CDN(),
-                            VIRTUAL_FS({ filename, transform }),
-                            WASM(),
-                        ],
-                        globalName: 'bundler',
-                    });
-
-                    result?.outputFiles?.forEach((x) => {
-                        if (!fs.existsSync(path.dirname(x.path))) {
-                            fs.mkdirSync(path.dirname(x.path));
-                        }
-
-                        fs.writeFileSync(x.path, x.text);
+                    result?.outputFiles?.forEach(({ path, text }) => {
+                        if (path == outfile) 
+                            // Remove unesscary space
+                            content = text?.trim?.();
                     });
 
                     if (result?.errors.length > 0)
-                        throw result.errors[0];
+                        throw { type: "esbuild", error: [await createNotice(result.errors, "error")] };
 
-                    content = await fs.promises.readFile(outfile, "utf-8") as string;
-                    content = content?.trim?.(); // Remove unesscary space
+                    if (result?.warnings.length > 0)
+                        postMessage({
+                            event: "warn",
+                            details: {
+                                type: `esbuild warning`,
+                                message: [await createNotice(result.warnings, "warning")]
+                            }
+                        });
 
-                    const output = await renderAstroToHTML(content);
+                    const output = await renderAstroToHTML(content, ModuleWorkerSupported);
                     if (typeof output === 'string')
-                        content = output;
+                        content = output?.trim?.();
                     else
-                        throw output.errors[0];
+                        throw { type: "astro-to-html", error: output.errors };
 
                     if (current?.filename == filename) {
                         html = { content, input };
@@ -246,7 +305,7 @@ const start = (port) => {
                         });
                         timestamp(timing, 'format');
 
-                        content = highlighter.codeToHtml(content, 'ts');
+                        content = highlighter.codeToHtml(content, { lang: 'ts' });
                         timestamp(timing, 'highlight');
 
                         timestamp(timing, 'total');
@@ -271,7 +330,7 @@ const start = (port) => {
                         });
                         timestamp(timing, 'format');
 
-                        content = highlighter.codeToHtml(content, 'html');
+                        content = highlighter.codeToHtml(content, { lang: 'html' });
                         timestamp(timing, 'highlight');
 
                         timestamp(timing, 'total');
@@ -290,22 +349,36 @@ const start = (port) => {
                     }
                 });
             } catch (error) {
-                let err = (error?.error ?? error);
+                // Firefox error
+                if (String(error).includes('Dynamic module import is disabled or not supported in this context')) {
+                  postMessage({
+                    event: 'error',
+                    details: {
+                      type: 'Browser support',
+                      error: `This browser doesn't support ESM in workers yet. Please switch to another browser like Chrome.`,
+                    },
+                  });
+                    
+                  console.warn(error.error ?? error);
+                  return;
+                }
+
+                // @ts-ignore
                 postMessage({
                     event: "error",
                     details: {
                         type: `${error?.type ?? "Build"} error`,
-                        error: err
+                        error: error.error ?? error
                     }
                 });
 
-                return;
+                console.warn(error.error ?? error);
             }
         })();
-    }, 30));
+    }, 250));
 
-    port.onmessage = ({ data }) => {    
-        let { event, details } = JSON.parse(decode(data)); 
+    port.onmessage = ({ data }) => {
+        let { event, details } = JSON.parse(decode(data));
         BuildEvents.emit(event, details);
     };
 }
