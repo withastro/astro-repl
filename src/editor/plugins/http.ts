@@ -1,4 +1,5 @@
 // Based on https://github.com/hardfist/neo-tools/blob/main/packages/bundler/src/plugins/http.ts
+// and https://github.com/okikio/bundle/blob/main/src/ts/plugins/http.ts
 import type { Plugin } from 'esbuild';
 
 import { EXTERNALS_NAMESPACE } from './external';
