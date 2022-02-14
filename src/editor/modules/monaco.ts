@@ -82,7 +82,8 @@ import EDITOR_WORKER_URL from "worker:../workers/editor.ts";
 import { WebWorker } from "../../utils/WebWorker";
 
 export const initialValue = `---
-import {format} from 'date-fns'; 
+import {format} from 'date-fns';
+import coolImages from 'cool-images';
 
 // Welcome to Astro!
 // Write JavaScript & TypeScript here, in the "component script."
@@ -94,6 +95,7 @@ import {format} from 'date-fns';
 
 const builtAt: Date = new Date();
 const builtAtFormatted = format(builtAt, 'MMMM dd, yyyy -- H:mm:ss.SSS');
+const image = coolImages.one();
 ---
 <html lang="en">
   <head>
@@ -124,6 +126,9 @@ const builtAtFormatted = format(builtAt, 'MMMM dd, yyyy -- H:mm:ss.SSS');
       <p class="note">
         <strong>RENDERED AT:</strong><br/>
         {builtAtFormatted}
+      </p>
+      <p>
+        <img src={image} title={`Image source ${image} provided by ${new URL(image).hostname}!`} />
       </p>
     </header>
   </body>
