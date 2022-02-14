@@ -66,7 +66,7 @@ const useMonaco = (Monaco: typeof import('../../editor/modules/monaco'), editorR
     models[0].applyEdits([
       {
         range: new Range(end.lineNumber, end.column, end.lineNumber, end.column),
-        text: `import ${basename} from '@/${basename}.astro';\n`,
+        text: `// import ${basename} from '@/${basename}.astro';\n`,
       },
     ]);
     setTab(model);
