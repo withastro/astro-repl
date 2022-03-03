@@ -5,8 +5,9 @@
         "jsxFragmentFactory": "Fragment",
         "moduleResolution": "node",
         "target": "ESNext",
-        "module": "ES2020",
+        "module": "ES2022",
         "lib": [
+            "ES2021",
             "ES2020",
             "DOM",
             "DOM.Iterable",
