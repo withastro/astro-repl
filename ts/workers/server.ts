@@ -7,17 +7,19 @@ import {
     resolveConfig,
     generateCodeFrame,
     ssrTransform,
+    ssrLoadModule,
 } from 'browser-vite/dist/browser';
 import type {
     ViteDevServer,
-    PluginOption,
-    ssrLoadModule
+    PluginOption
 } from 'browser-vite/dist/node';
+import { BASE_URL } from '../utils/constants';
   
 import { viteClientPlugin } from "./client";
 import { runOptimize } from './optimize';
 import { nodeResolvePlugin } from './resolve';
   
+const VFS_ROOT = "/";
   export async function createServer() {
     const config = await resolveConfig(
       {
@@ -47,37 +49,37 @@ import { nodeResolvePlugin } from './resolve';
       add() {},
     };
     const server: ViteDevServer = {
-      config,
-      pluginContainer,
-      moduleGraph,
-      transformWithEsbuild,
-      transformRequest(url, options) {
-        return transformRequest(url, server, options);
-      },
-      ssrTransform,
-      printUrls() {},
-      _globImporters: {},
-      ws: {
-        send(data) {
-          // send HMR data to vite client in iframe however you want (post/broadcast-channel ...)
+        config,
+        pluginContainer,
+        moduleGraph,
+        transformWithEsbuild,
+        transformRequest(url, options) {
+            return transformRequest(url, server, options);
         },
-        async close() {},
-        on() {},
-        off() {},
-      },
-      watcher,
-      async ssrLoadModule(url) {
-        return ssrLoadModule(url, server, loadModule);
-      },
-      ssrFixStacktrace() {},
-      async close() {},
-      async restart() {},
-      _optimizeDepsMetadata: null,
-      _isRunningOptimizer: false,
-      _ssrExternals: [],
-      _restartPromise: null,
-      _forceOptimizeOnRestart: false,
-      _pendingRequests: new Map(),
+        ssrTransform,
+        printUrls() { },
+        _globImporters: {},
+        ws: {
+            send(data) {
+                // send HMR data to vite client in iframe however you want (post/broadcast-channel ...)
+            },
+            async close() { },
+            on() { },
+            off() { },
+        },
+        watcher,
+        async ssrLoadModule(url) {
+            return ssrLoadModule(url, server, loadModule);
+        },
+        ssrFixStacktrace() { },
+        async close() { },
+        async restart() { },
+        _optimizeDepsMetadata: null,
+        _isRunningOptimizer: false,
+        _ssrExternals: [],
+        _restartPromise: null,
+        _forceOptimizeOnRestart: false,
+        _pendingRequests: new Map(),
     };
   
     server.transformIndexHtml = createDevHtmlTransformFn(server);

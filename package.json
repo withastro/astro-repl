@@ -3,9 +3,18 @@
   "volta": {
     "node": "16"
   },
-  "browser": "./main.ts",
-  "scripts": {},
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
   "dependencies": {
-    "browser-vite": "^2.7.0-browser.10"
+    "browser-vite": "^2.7.0-browser.10",
+    "workbox-core": "^6.5.1",
+    "workbox-routing": "^6.5.1"
+  },
+  "devDependencies": {
+    "astro": "^0.23.5"
   }
 }
