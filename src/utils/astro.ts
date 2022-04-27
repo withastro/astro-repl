@@ -85,6 +85,6 @@ export async function renderAstroToHTML(content: string, ModuleWorkerSupported: 
     };
   }
 
-  console.log("Debug", html);
+  console.log("Debuging", html);
   return html;
 }

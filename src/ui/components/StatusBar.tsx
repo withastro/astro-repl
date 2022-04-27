@@ -9,11 +9,12 @@ export interface Props {
 }
 
 const StatusBar: FunctionalComponent<Props> = ({ error, children, duration = 0 }) => {
-  const compilerVersion = pkg.dependencies['@astrojs/compiler'].slice(1);
+  const pkgName = "astro";
+  const compilerVersion = pkg.dependencies[pkgName].slice(1);
   const Version = () => (
     <div>
-      <a href="https://github.com/snowpackjs/astro-compiler-next">
-        <span class="ap-statusbar-status">@astrojs/compiler</span>
+      <a href="https://github.com/withastro/astro">
+        <span class="ap-statusbar-status">{pkgName}</span>
       </a>
       <span class="ap-statusbar-time">{compilerVersion}</span>
     </div>
