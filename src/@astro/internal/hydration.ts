@@ -1,34 +1,14 @@
-import { valueToEstree } from 'estree-util-value-to-estree';
-import * as astring from 'astring';
 import { hydrationSpecifier, serializeListValue } from './util';
 
-import type { SSRResult, SSRElement, AstroComponentMetadata } from "astro";
+import type { SSRResult, SSRElement, AstroComponentMetadata, SSRLoadedRenderer } from "astro";
 
-const { generate, GENERATOR } = astring;
 
-// INVESTIGATE: What features are we getting from this that we need?
-// JSON.stringify has a "replacer" argument.
-// A more robust version alternative to `JSON.stringify` that can handle most values
-// see https://github.com/remcohaszing/estree-util-value-to-estree#readme
-const customGenerator: astring.Generator = {
-	...GENERATOR,
-	Literal(node, state) {
-		if (node.raw != null) {
-			// escape closing script tags in strings so browsers wouldn't interpret them as
-			// closing the actual end tag in HTML
-			state.write(node.raw.replace('</script>', '<\\/script>'));
-		} else {
-			GENERATOR.Literal(node, state);
-		}
-	},
-};
+import serializeJavaScript from '../../utils/serialize-javascript';
 
 // Serializes props passed into a component so that they can be reused during hydration.
 // The value is any
 export function serializeProps(value: any) {
-	return generate(valueToEstree(value), {
-		generator: customGenerator,
-	});
+	return serializeJavaScript(value);
 }
 
 const HydrationDirectives = ['load', 'idle', 'media', 'visible', 'only'];
@@ -80,12 +60,21 @@ export function extractDirectives(inputProps: Record<string | number, any>): Ext
 
 					// throw an error if an invalid hydration directive was provided
 					if (HydrationDirectives.indexOf(extracted.hydration.directive) < 0) {
-						throw new Error(`Error: invalid hydration directive "${key}". Supported hydration methods: ${HydrationDirectives.map((d) => `"client:${d}"`).join(', ')}`);
+						throw new Error(
+							`Error: invalid hydration directive "${key}". Supported hydration methods: ${HydrationDirectives.map(
+								(d) => `"client:${d}"`
+							).join(', ')}`
+						);
 					}
 
 					// throw an error if the query wasn't provided for client:media
-					if (extracted.hydration.directive === 'media' && typeof extracted.hydration.value !== 'string') {
-						throw new Error('Error: Media query must be provided for "client:media", similar to client:media="(max-width: 600px)"');
+					if (
+						extracted.hydration.directive === 'media' &&
+						typeof extracted.hydration.value !== 'string'
+					) {
+						throw new Error(
+							'Error: Media query must be provided for "client:media", similar to client:media="(max-width: 600px)"'
+						);
 					}
 
 					break;
@@ -103,42 +92,48 @@ export function extractDirectives(inputProps: Record<string | number, any>): Ext
 }
 
 interface HydrateScriptOptions {
-	renderer: any;
+	renderer: SSRLoadedRenderer;
 	result: SSRResult;
 	astroId: string;
 	props: Record<string | number, any>;
 }
 
 /** For hydrated components, generate a <script type="module"> to load the component */
-export async function generateHydrateScript(scriptOptions: HydrateScriptOptions, metadata: Required<AstroComponentMetadata>): Promise<SSRElement> {
+export async function generateHydrateScript(
+	scriptOptions: HydrateScriptOptions,
+	metadata: Required<AstroComponentMetadata>
+): Promise<SSRElement> {
 	const { renderer, result, astroId, props } = scriptOptions;
 	const { hydrate, componentUrl, componentExport } = metadata;
 
 	if (!componentExport) {
-		throw new Error(`Unable to resolve a componentExport for "${metadata.displayName}"! Please open an issue.`);
+		throw new Error(
+			`Unable to resolve a componentExport for "${metadata.displayName}"! Please open an issue.`
+		);
 	}
 
-	let hydrationSource = '';
-	if (renderer.hydrationPolyfills) {
-		hydrationSource += `await Promise.all([${(await Promise.all(renderer.hydrationPolyfills.map(async (src: string) => `\n  import("${await result.resolve(src)}")`))).join(
-			', '
-		)}]);\n`;
-	}
+	let hydrationSource = ``;
 
-	hydrationSource += renderer.source
-		? `const [{ ${componentExport.value}: Component }, { default: hydrate }] = await Promise.all([import("${await result.resolve(componentUrl)}"), import("${await result.resolve(
-				renderer.source
-		  )}")]);
+	hydrationSource += renderer.clientEntrypoint
+		? `const [{ ${
+				componentExport.value
+		  }: Component }, { default: hydrate }] = await Promise.all([import("${await result.resolve(
+				componentUrl
+		  )}"), import("${await result.resolve(renderer.clientEntrypoint)}")]);
   return (el, children) => hydrate(el)(Component, ${serializeProps(props)}, children);
 `
 		: `await import("${await result.resolve(componentUrl)}");
   return () => {};
 `;
-
+	// TODO: If we can figure out tree-shaking in the final SSR build, we could safely
+	// use BEFORE_HYDRATION_SCRIPT_ID instead of 'astro:scripts/before-hydration.js'.
 	const hydrationScript = {
 		props: { type: 'module', 'data-astro-component-hydration': true },
 		children: `import setup from '${await result.resolve(hydrationSpecifier(hydrate))}';
-setup("${astroId}", {${metadata.hydrateArgs ? `value: ${JSON.stringify(metadata.hydrateArgs)}` : ''}}, async () => {
+${`import '${await result.resolve('astro:scripts/before-hydration.js')}';`}
+setup("${astroId}", {name:"${metadata.displayName}",${
+			metadata.hydrateArgs ? `value: ${JSON.stringify(metadata.hydrateArgs)}` : ''
+		}}, async () => {
   ${hydrationSource}
 });
 `,

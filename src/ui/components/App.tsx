@@ -15,8 +15,8 @@ import useMonaco from '../hooks/useMonaco';
 import { TABS } from '../const';
 import useWindowSize from '../hooks/useWindowSize';
 
-import { BuildWorker, WorkerEvents } from '../../utils/WebWorker';
-import { debounce, ModuleWorkerSupported } from '../../utils';
+import { BuildWorker, WorkerEvents, ModuleWorkerSupported } from '../../utils/WebWorker';
+import { debounce } from '../../utils';
 
 import { encode, decode } from "../../utils/encode-decode";
 

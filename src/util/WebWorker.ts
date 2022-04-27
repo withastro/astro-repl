@@ -1,11 +1,9 @@
-// Based on https://github.com/okikio/bundle/blob/main/src/ts/util/WebWorker.ts
-import { EventEmitter } from '@okikio/emitter';
 import {
     SharedWorkerPolyfill as WebWorker,
     SharedWorkerSupported,
 } from "@okikio/sharedworker";
 
-import EMPTY_WORKER_URL from "worker:../editor/workers/empty.ts";
+import EMPTY_WORKER_URL from "worker:../workers/empty.ts";
 
 // https://stackoverflow.com/questions/62954570/javascript-feature-detect-module-support-for-web-workers
 export const ModuleWorkerTest = () => {
@@ -60,20 +58,10 @@ console.log(
     `This browser supports ${WorkerType} workers!`
 );
 console.log(
-    `This browser supports ${SharedWorkerSupported ? "Shared Web Workers" : "Normal Web Workers"
+    `This browser supports ${
+        SharedWorkerSupported ? "Shared Web Workers" : "Normal Web Workers"
     }!`
 );
 
-import BUILD_WORKER_URL from 'worker:../editor/workers/build.ts';
-export const WorkerEvents = new EventEmitter(); 
-export const BuildWorkerOptions = { 
-    name: 'build-worker',
-    type: WorkerType
-} as WorkerOptions;
-
-export const BuildWorker = new WebWorker(BUILD_WORKER_URL, BuildWorkerOptions); 
-BuildWorker?.start?.();
-
 export { WebWorker };
 export default WebWorker;
-

@@ -13,15 +13,17 @@ interface ComponentMetadata {
 interface CreateMetadataOptions {
 	modules: ModuleInfo[];
 	hydratedComponents: any[];
+	clientOnlyComponents: any[];
 	hydrationDirectives: Set<string>;
 	hoisted: any[];
 }
 
 export class Metadata {
-	public fileURL: URL;
+	public mockURL: URL;
 	public modules: ModuleInfo[];
 	public hoisted: any[];
 	public hydratedComponents: any[];
+	public clientOnlyComponents: any[];
 	public hydrationDirectives: Set<string>;
 
 	private metadataCache: Map<any, ComponentMetadata | null>;
@@ -30,13 +32,14 @@ export class Metadata {
 		this.modules = opts.modules;
 		this.hoisted = opts.hoisted;
 		this.hydratedComponents = opts.hydratedComponents;
+		this.clientOnlyComponents = opts.clientOnlyComponents;
 		this.hydrationDirectives = opts.hydrationDirectives;
-		this.fileURL = new URL(filePathname, 'http://example.com');
+		this.mockURL = new URL(filePathname, 'http://example.com');
 		this.metadataCache = new Map<any, ComponentMetadata | null>();
 	}
 
 	resolvePath(specifier: string): string {
-		return specifier.startsWith('.') ? new URL(specifier, this.fileURL).pathname : specifier;
+		return specifier.startsWith('.') ? new URL(specifier, this.mockURL).pathname : specifier;
 	}
 
 	getPath(Component: any): string | null {
@@ -66,6 +69,19 @@ export class Metadata {
 		}
 	}
 
+	*clientOnlyComponentPaths() {
+		const found = new Set<string>();
+		for (const metadata of this.deepMetadata()) {
+			for (const component of metadata.clientOnlyComponents) {
+				const path = metadata.resolvePath(component);
+				if (path && !found.has(path)) {
+					found.add(path);
+					yield path;
+				}
+			}
+		}
+	}
+
 	/**
 	 * Gets all of the hydration specifiers used within this component.
 	 */
@@ -77,6 +93,17 @@ export class Metadata {
 					found.add(directive);
 					yield hydrationSpecifier(directive);
 				}
+			}
+		}
+	}
+
+	*hoistedScriptPaths() {
+		for (const metadata of this.deepMetadata()) {
+			let i = 0,
+				pathname = metadata.mockURL.pathname;
+			while (i < metadata.hoisted.length) {
+				yield `${pathname}?astro&type=script&index=${i}`;
+				i++;
 			}
 		}
 	}
@@ -137,4 +164,3 @@ export class Metadata {
 export function createMetadata(filePathname: string, options: CreateMetadataOptions) {
 	return new Metadata(filePathname ?? globalThis.location.pathname, options);
 }
-

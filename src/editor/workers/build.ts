@@ -2,7 +2,9 @@ import { initialize as EsbuildInitialize, build, formatMessages, type PartialMes
 import { EventEmitter } from "@okikio/emitter";
 
 import { getHighlighter, setCDN } from 'shiki';
-import { transform, initialize as AstroInitialize } from '@astrojs/compiler';
+
+// @ts-ignore
+import { transform, initialize as AstroInitialize } from '../../../node_modules/@astrojs/compiler/browser/index';
 
 // @ts-ignore
 import prettier from 'prettier/esm/standalone.mjs';
@@ -268,10 +270,11 @@ const start = (port) => {
                         });
 
                     const output = await renderAstroToHTML(content, ModuleWorkerSupported);
-                    if (typeof output === 'string')
-                        content = output?.trim?.();
+                    if ("html" in output)
+                        content = output?.html?.toString?.().trim?.();
                     else
-                        throw { type: "astro-to-html", error: output.errors };
+                        // @ts-ignore
+                        throw { type: "astro-to-html", error: output?.error };
 
                     if (current?.filename == filename) {
                         html = { content, input };
@@ -367,7 +370,7 @@ const start = (port) => {
                     event: "error",
                     details: {
                         type: `${error?.type ?? "Build"} error`,
-                        error: (Array.isArray(error.error) ? error.error.join("\n") : error.error.toString()) ?? error?.message ?? error
+                        error: (Array.isArray(error.error) ? error.error.join("\n") : error?.error?.toString?.()) ?? error?.message ?? error
                     }
                 });
                 

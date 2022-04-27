@@ -1,4 +1,5 @@
-export * from "../../../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js";
+/// <reference lib="webworker" />
+// export * from "../../../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js";
 
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
@@ -6,7 +7,7 @@ export * from "../../../node_modules/monaco-editor/esm/vs/language/typescript/ts
  *--------------------------------------------------------------------------------------------*/
 // 'use strict';
 import { initialize } from "../../utils/worker-init";
-import { create } from '../../../node_modules/monaco-editor/esm/vs/language/typescript/tsWorker.js';
+import { create } from '../../../node_modules/monaco-editor/esm/vs/language/typescript/ts.worker.js';
 
 export const connect = (port) => {
     let initialized = false;

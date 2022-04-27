@@ -53,7 +53,8 @@ export const VIRTUAL_FS = ({ filename, transform, getResolvedPath, getFile }: fi
                             internalURL: '/play/@astro/internal.min.js',
                             sourcemap: false,
                             sourcefile: filename,
-                            pathname: filename
+                            pathname: filename,
+                            projectRoot: globalThis.location.origin + "/"
                         }).then(res => res.code);
                     } catch (e) {
                         throw `Astro transform error - "${resolvedPath}" couldn't be transformed by the Astro compiler`;
